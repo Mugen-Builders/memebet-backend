@@ -19,9 +19,9 @@ const app = express();
 const port = 8383;
 app.use(express.json());
 
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
   req.header("x-msg_sender")
-  dapp.createNotice({payload:"0x1234"});
+  await dapp.createNotice({payload:"0x1234"});
   res.send({ some: "response" });
 
 });
