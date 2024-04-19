@@ -3,12 +3,12 @@
 // it handles the betting and settling of funds
 // it should communicate directly to deroll-wallet and
 // create a custom local-only address
-export class BetPool {
+export class GameBetPool {
 
 }
 
 // Manages a betting session/game
-// After approving a new GameFactoryManager, we have a factory of bet games
+// After approving a new GameFactory, we have a factory of bet games
 //  ie: GameFactoryManager.create(Soccer games instructions) --> soccerInstanceFactory
 //      soccerInstanceFactory.create(BR VS Italy) --> new bet game
 //  This will be used to establish the new types of bets and categories (soccer, CSGO, coinflip...)
@@ -21,8 +21,8 @@ export class GameFactory {
 
 }
 // Higher level manager for all things bet
-// Handles the creation and listing of new models
-// Handles the creation and listing of new games
-export class BetsManager {
+// Handles the creation and listing of new GameFactory
+// Handles the creation and listing of new games (instances)
+export class GamesManager {
 
 }
