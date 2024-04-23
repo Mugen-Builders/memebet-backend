@@ -1,3 +1,4 @@
+import { Bet, VFR, PlayerBet } from "./types";
 
 // Controls the funds for a bet
 // it handles the betting and settling of funds
@@ -59,7 +60,7 @@ export class BetPool {
 
 interface game {
     id: string
-    players: any
+    playersBets: any
     fees: number
     startTime: number
     endTime: number
@@ -68,28 +69,23 @@ interface game {
     settle(...args: any[]): any
 }
 
-type Bet = {
-    pick: string
-    tokenAddress: string
-    amount: bigint
-    effectiveAmount: bigint
-    odds: number
-}
-type VFR = (picks: Map<string, Map<string, Array<Bet>>>, bets: Array<Bet>, data: any) => string
 
 export class Games implements game {
     id: string
     picks: Array<string>;
     currentOdds: Map<string, bigint>
     playerIds: Array<string>;
-    players: Map<string, Map<string, Array<Bet>>>;
+    playersBets: Map<string, PlayerBet>;
+    picksBets: Map<string, Bet[]>;
     fees: number;
     startTime: number;
     endTime: number;
     verifyFun: VFR
+
     constructor(_picks: Array<string>, start: number, end: number, verifyFun: VFR) {
         this.id = ""
-        this.players = new Map();
+        this.playersBets = new Map();
+        this.picksBets = new Map();
         this.picks = _picks;
         this.currentOdds = new Map();
         this.picks.forEach((e) => {
@@ -102,25 +98,26 @@ export class Games implements game {
         this.verifyFun = verifyFun;
     }
     getPlayer = (player: string) => {
-        return { player: player, Bet: this.players.get(player) }
+        return { player: player, Bet: this.playersBets.get(player) }
     }
     calculateOdds = () => {
 
     }
-    makeBet = (address: string, _bet: Bet) => {
-        let player = this.players.get(address);
+    makeBet = (_bet: Bet) => {
+        let player = this.playersBets.get(_bet.player);
         if (player == undefined) {
-            this.playerIds.push(address);
+            this.playerIds.push(_bet.player);
             player = new Map();
-            player.set(address, [_bet]);
-            this.players.set(address, player);
+            player.set(_bet.player, [_bet]);
+            this.playersBets.set(_bet.player, player);
 
         } else {
             let bet = player.get(_bet.pick);
             bet?.push(_bet);
-            this.players.set(address, player);
+            this.playersBets.set(_bet.player, player);
         }
-
+        this.picksBets.get(_bet.pick)?.push(_bet);
+        //@todo odds calculation and update
     }
     settle = (_picks: Map<string, Map<string, Bet[]>>, _bets: Bet[], _data: any) => {
         const res = this.verifyFun(_picks, _bets, _data);
