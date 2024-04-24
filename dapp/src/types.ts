@@ -1,3 +1,5 @@
+import { Hex }  from "viem";
+
 export type Bet = {
     pick: string
     player:string
@@ -8,4 +10,4 @@ export type Bet = {
 }
 export type PlayerBet = Map<string, Array<Bet>>;
 
-export type VFR = (picksBets: Map<string, Bet[]>, bets: Array<Bet>, data: any) => string
+export type VFR = (picksBets: Map<string, Bet[]>, bets: Array<Bet>, data: string, signature: Hex) => Promise<string>;
