@@ -1,11 +1,65 @@
+import { Hex } from "viem";
 import { Bet, VFR, PlayerBet } from "./types";
+import { ValidatorFunctionRunner } from "./validator";
 
 // Controls the funds for a bet
 // it handles the betting and settling of funds
 // it should communicate directly to deroll-wallet and
 // create a custom local-only address
 export class BetPool {
+    poolAddress: string
+    fundsLocked = BigInt(0)
+    picksBets: Map<string, Bet[]>;
 
+    constructor(picks: Array<string>) {
+        this.poolAddress = "0x01";
+        this.picksBets = new Map();
+        picks.forEach((pick) => {
+            this.picksBets.set(pick, []);
+        });
+    }
+
+    addBet(bet: Bet) {
+        // transfer the funds to the pool
+        // @TODO wallet integration
+        this.picksBets.get(bet.pick)?.push(bet);
+        this.fundsLocked += bet.amount;
+    }
+
+    payout(mode: "win" | "invalid", winningPicks?: Array<string>) {
+        if (mode === "win") {
+            winningPicks!.forEach((pick) => {
+                this.picksBets.get(pick)?.forEach((b) => {
+                    this.resdistribution(this.picksBets.get(pick)!, "effectiveAmount");
+                });
+            });
+        } else { // invalid will return the original amount
+            this.picksBets.forEach((bets) => {
+                this.resdistribution(bets, "amount");
+            });
+        }
+    }
+    // allows for internal redistribution of values based on bets
+    // it can use the winning value (effectiveAmount)
+    // OR it can use the original value for reset/invalidation
+    private resdistribution(bets: Array<Bet>, key: "amount" | "effectiveAmount") {
+        let total = BigInt(0);
+        bets.forEach((b) => {
+            total += b[key] ?? BigInt(0);
+        })
+        this.fundsLocked -= total;
+    }
+
+    // sends any outstanding funds to the DAO wallet
+    close() {
+        // @TODO wallet integration
+        // @TODO define default DAO wallet
+        if(this.fundsLocked > BigInt(0)) {
+            // send funds to DAO
+        }
+        // delete pool wallet from the wallet integration
+        // @TODO 
+    }
 }
 
 // Manages a betting session/game
@@ -58,34 +112,24 @@ export class BetPool {
 // }
 
 
-interface game {
-    id: string
-    playersBets: any
-    fees: number
-    startTime: number
-    endTime: number
-    getPlayer(...args: any[]): any
-    makeBet(...args: any[]): any
-    settle(...args: any[]): any
-}
 
-
-export class Games implements game {
+export class Game {
     id: string
     picks: Array<string>;
     currentOdds: Map<string, bigint>
     playerIds: Array<string>;
     playersBets: Map<string, PlayerBet>;
-    picksBets: Map<string, Bet[]>;
+    
     fees: number;
     startTime: number;
     endTime: number;
-    verifyFun: VFR
+    verifyFun: ValidatorFunctionRunner
 
-    constructor(_picks: Array<string>, start: number, end: number, verifyFun: VFR) {
-        this.id = ""
+    betPool: BetPool
+
+    constructor(_picks: Array<string>, start: number, end: number, verifyFun: ValidatorFunctionRunner) {
+        this.id = "@TODO generate id"
         this.playersBets = new Map();
-        this.picksBets = new Map();
         this.picks = _picks;
         this.currentOdds = new Map();
         this.picks.forEach((e) => {
@@ -96,6 +140,7 @@ export class Games implements game {
         this.endTime = end;
         this.playerIds = [];
         this.verifyFun = verifyFun;
+        this.betPool = new BetPool(_picks);
     }
     getPlayer = (player: string) => {
         return { player: player, Bet: this.playersBets.get(player) }
@@ -116,12 +161,22 @@ export class Games implements game {
             bet?.push(_bet);
             this.playersBets.set(_bet.player, player);
         }
-        this.picksBets.get(_bet.pick)?.push(_bet);
+        this.betPool.addBet(_bet);
         //@todo odds calculation and update
     }
-    settle = (_picks: Map<string, Map<string, Bet[]>>, _bets: Bet[], _data: any) => {
-        const res = this.verifyFun(_picks, _bets, _data);
+    settle = async (_data: string, signature: Hex) => {
+        const winningPick = await this.verifyFun.run(this.betPool.picksBets, _data, signature);
+        //@TODO extra logic for multiple winning picks
+        if (!this.picks.includes(winningPick)) {
+            console.log("Invalid pick or draw");
+            this.betPool.payout("invalid");
+        } else {
+            this.betPool.payout("win", [winningPick]);
+        }
+        this.betPool.close();
     }
+
+
 }
 
 

@@ -67,7 +67,7 @@ describe("ValidatorFunctionRunner", () => {
             }
         `;
         const runner = new ValidatorFunctionRunner(temp, checker);
-        expect(runner.run(emptyPicks, [], data)).toBe("true");
+        expect(runner.run(emptyPicks, data, "0x00")).toBe("true");
     });
 
     test("should run a validator function and return basic pick", () => {
@@ -79,12 +79,11 @@ describe("ValidatorFunctionRunner", () => {
         const temp = `
             (...args) => {
                 const [picks, bets, data] = args;
-                console.log(args);
                 return picks.keys().next().value;
             }
         `;
         const runner = new ValidatorFunctionRunner(temp, checker);
-        expect(runner.run(picks, [], data)).toBe("test_pick");
+        expect(runner.run(picks, data, "0x00")).toBe("test_pick");
     });
 
     test("should run a validator function and use dao checker", async () => {
@@ -98,7 +97,7 @@ describe("ValidatorFunctionRunner", () => {
         const temp = `
             async (...args) => {
                 const viem = require("viem");
-                const [picks, bets, data, signature, checkers] = args;
+                const [picks, data, signature, checkers] = args;
                 const hash = viem.hashMessage(data);
                 const checker = checkers.get("dao_checker");
                 if(await checker.verify(hash, signature)) {
@@ -109,7 +108,7 @@ describe("ValidatorFunctionRunner", () => {
         `;
         checkers.set("dao_checker", checker);
         const runner = new ValidatorFunctionRunner(temp, checker);
-        expect(runner.run(picks, [], data, signature)).resolves.toBe("test_pick");
+        expect(runner.run(picks, data, signature)).resolves.toBe("test_pick");
     });
 
     test("should run a validator function and fail to verify dao signature", async () => {
@@ -124,7 +123,7 @@ describe("ValidatorFunctionRunner", () => {
         const temp = `
             async (...args) => {
                 const viem = require("viem");
-                const [picks, bets, data, signature, checkers] = args;
+                const [picks, data, signature, checkers] = args;
                 const hash = viem.hashMessage(data);
                 const checker = checkers.get("dao_checker");
                 if(await checker.verify(hash, signature)) {
@@ -135,6 +134,6 @@ describe("ValidatorFunctionRunner", () => {
         `;
         checkers.set("dao_checker", checker);
         const runner = new ValidatorFunctionRunner(temp, checker);
-        expect(runner.run(picks, [], alterateData, signature)).rejects.toThrow("Failed to verify dao signature");
+        expect(runner.run(picks, alterateData, signature)).rejects.toThrow("Failed to verify dao signature");
     });
 });
