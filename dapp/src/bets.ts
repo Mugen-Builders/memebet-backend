@@ -1,29 +1,57 @@
-import { Hex } from "viem";
+import { Hex, getAddress } from "viem";
 import { Bet, VFR, PlayerBet } from "./types";
 import { ValidatorFunctionRunner } from "./validator";
-
+import { WalletApp } from "@deroll/wallet";
+import { v4 as uuidv4 } from 'uuid';
 // Controls the funds for a bet
 // it handles the betting and settling of funds
 // it should communicate directly to deroll-wallet and
 // create a custom local-only address
+const ERC20_TOKEN = "0xf795b3D15D47ac1c61BEf4Cc6469EBb2454C6a9b"; //this is the sunodo token a sample erc20 token
+const POOL_ADDRESS = "0x01"; //this is a sample address for bet pool
+const DAO_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"; //this is a sample address for the DAO
 export class BetPool {
     poolAddress: string
     fundsLocked = BigInt(0)
     picksBets: Map<string, Bet[]>;
-
-    constructor(picks: Array<string>) {
+    effectiveBets: Map<string, bigint>; //this is a map of the amount bet against each bet at any point of time which will help us calculate the effective bet amount of a player
+    wallet: WalletApp
+    constructor(picks: Array<string>, _wallet: WalletApp) {
         this.poolAddress = "0x01";
         this.picksBets = new Map();
         picks.forEach((pick) => {
             this.picksBets.set(pick, []);
         });
+        this.wallet = _wallet;
+        this.effectiveBets = new Map();
     }
 
     addBet(bet: Bet) {
         // transfer the funds to the pool
         // @TODO wallet integration
-        this.picksBets.get(bet.pick)?.push(bet);
+
         this.fundsLocked += bet.amount;
+        const _effectiveBet = this.effectiveBets.get(bet.pick);
+        if (_effectiveBet) {
+            this.effectiveBets.set(bet.pick, _effectiveBet + bet.amount);
+        } else {
+            this.effectiveBets.set(bet.pick, bet.amount);
+        }
+        this.wallet.transferERC20(getAddress(ERC20_TOKEN), bet.player, POOL_ADDRESS, bet.amount);
+        const newBet = this.calculateEffectiveAmount(bet);
+        this.picksBets.get(bet.pick)?.push(newBet);
+    }
+
+    //This function adds a simple algorithm to calculate the effective amount a player will win after placing a bet at any point in time.
+    //More logic can be added to this depending on different scenarios.
+    calculateEffectiveAmount(bet: Bet): Bet {
+        const _effectiveBet = this.effectiveBets.get(bet.pick);
+        let _effective_amount = bet.amount;
+        if (_effectiveBet) {
+            _effective_amount = (bet.amount / _effectiveBet) * (this.fundsLocked - _effectiveBet);
+        }
+        bet.effectiveAmount = _effective_amount;
+        return bet;
     }
 
     payout(mode: "win" | "invalid", winningPicks?: Array<string>) {
@@ -45,7 +73,10 @@ export class BetPool {
     private resdistribution(bets: Array<Bet>, key: "amount" | "effectiveAmount") {
         let total = BigInt(0);
         bets.forEach((b) => {
-            total += b[key] ?? BigInt(0);
+            const amount = b[key] ?? BigInt(0);
+            total += amount;
+            this.wallet.transferERC20(getAddress(ERC20_TOKEN), POOL_ADDRESS, b.player, amount);
+
         })
         this.fundsLocked -= total;
     }
@@ -54,10 +85,12 @@ export class BetPool {
     close() {
         // @TODO wallet integration
         // @TODO define default DAO wallet
-        if(this.fundsLocked > BigInt(0)) {
+        if (this.fundsLocked > BigInt(0)) {
             // send funds to DAO
+            this.wallet.transferERC20(getAddress(ERC20_TOKEN), POOL_ADDRESS, DAO_ADDRESS, this.fundsLocked);
         }
-        // delete pool wallet from the wallet integration
+
+        // delete pool wallet from the wallet integration /*this may not be possible with the functions exposed from deroll but we are anyways initializing new wallet for each game"
         // @TODO 
     }
 }
@@ -67,49 +100,63 @@ export class BetPool {
 //  ie: GameFactoryManager.create(Soccer games instructions) --> soccerInstanceFactory
 //      soccerInstanceFactory.create(BR VS Italy) --> new bet game
 //  This will be used to establish the new types of bets and categories (soccer, CSGO, coinflip...)
-// export class GameFactoryManager {
-//     Games: Map<string, any>
-//     constructor() {
-//         this.Games = new Map();
-//     }
-//     newFactory(...args) {
-//         return new GameFactory(..args);
-//     }
-//     createNewFactory(name: string) {
-//         const factory = this.Games.get(name);
-
-//         return new factory();
-//     }
-// }
+export class GameFactoryManager {
+    Games: Map<string, any>
+    constructor() {
+        this.Games = new Map();
+    }
+    newFactory(...args: any[]) {
+        return new GameFactory(args);
+    }
+    getGame(name: string) {
+        const factory = this.Games.get(name);
+        return factory;
+    }
+}
 // Manages the creation of game instaces
 // A factory knows the rules, the validator function
-// export class GameFactory {
+export class GameFactory {
+    instances: Map<string, any>;
+    name: string
+    constructor(...args: any[]) {
+        this.instances = new Map();
+        this.name = args[0];
+    }
 
-// }
+}
 // Higher level manager for all things bet
 // Handles the creation and listing of new models
 // Handles the creation and listing of new games
-// export class BetsManager {
-//     gameTypes: Map<string, any>
-//     gameSessions: Map<string, any>
+export abstract class BetsManager {
+    gameTypes: Map<string, any> //we might need a game interface here
+    gameSessions: Map<string, any>
+    GFM: GameFactoryManager
 
-//     constructor() {
-//         this.gameTypes = new Map();
-//         this.gameSessions = new Map();
-//     }
+    constructor() {
+        this.gameTypes = new Map();
+        this.gameSessions = new Map();
+        this.GFM = new GameFactoryManager();
+    }
 
-//     createNewGameType(...args: any[]) { //only DAO
-//         this.gameTypes.push(GameFactoryManager.newFactory(args));
 
-//     }
 
-//     createNewGame(_type: any) {
-//         if (_type === "soccer") {
-//             factoryInstance = this.gameTypes[1];
-//             gameSessions.push(factoryInstace.newGame(...args)); // teams, dates, championshi
-//         }
-//     }
-// }
+
+    createNewGameType(...args: any[]) { //only DAO
+        this.gameTypes.set(args[0], new Game(args[1], args[2], args[3], args[4], args[5]));
+    }
+
+    createNewGame(_type: any) {
+
+        const factoryInstance = <Game>this.gameTypes.get(_type);
+        if (factoryInstance) {
+            //@To-do create a new game
+        } else {
+            console.log(`game type:${_type} not supported by the platform make a proposal to our dao to add this game type`);
+            return
+        } // teams, dates, championshi
+
+    }
+}
 
 
 
@@ -119,16 +166,16 @@ export class Game {
     currentOdds: Map<string, bigint>
     playerIds: Array<string>;
     playersBets: Map<string, PlayerBet>;
-    
+
     fees: number;
     startTime: number;
     endTime: number;
     verifyFun: ValidatorFunctionRunner
 
     betPool: BetPool
-
-    constructor(_picks: Array<string>, start: number, end: number, verifyFun: ValidatorFunctionRunner) {
-        this.id = "@TODO generate id"
+    wallet: WalletApp
+    constructor(_picks: Array<string>, start: number, end: number, verifyFun: ValidatorFunctionRunner, _wallet: WalletApp) {
+        this.id = uuidv4();
         this.playersBets = new Map();
         this.picks = _picks;
         this.currentOdds = new Map();
@@ -140,13 +187,15 @@ export class Game {
         this.endTime = end;
         this.playerIds = [];
         this.verifyFun = verifyFun;
-        this.betPool = new BetPool(_picks);
+        this.wallet = _wallet
+        this.betPool = new BetPool(_picks, _wallet);
     }
     getPlayer = (player: string) => {
         return { player: player, Bet: this.playersBets.get(player) }
     }
     calculateOdds = () => {
-
+        //added this logic into the bet pool 
+        //can be removed
     }
     makeBet = (_bet: Bet) => {
         let player = this.playersBets.get(_bet.player);
