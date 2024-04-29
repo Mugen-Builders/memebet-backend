@@ -136,6 +136,10 @@ export abstract class BetsManager {
 
 
 export class Game {
+    getInfo(): any {
+        //TO-DO
+        throw new Error("Method not implemented.");
+    }
     id: string
     picks: Array<string>;
     currentOdds: Map<string, bigint>
