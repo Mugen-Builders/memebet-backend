@@ -20,14 +20,15 @@
     "openapi-typescript": "^6",
     "ts-node": "^10.9.2",
     "typescript": "^5",
-    "vitest": "^0.34"
+    "vitest": "^1.5.2"
   },
   "scripts": {
     "build": "run-s codegen compile",
     "codegen": "ts-node schema.ts",
     "compile": "tsc && esbuild ./src/main.ts --bundle --outfile=dist/main.js --platform=node --target=node20",
     "start": "ROLLUP_HTTP_SERVER_URL=\"http://127.0.0.1:5004\" ts-node src/main.ts",
-    "dev": "nonodo -- yarn ts-node src/main.ts"
+    "dev": "nonodo -- yarn ts-node src/main.ts",
+    "test": "vitest"
   },
   "keywords": [
     "cartesi"

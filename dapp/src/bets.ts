@@ -97,12 +97,12 @@ export class BetPool {
 export abstract class BetsManager {
     gameTypes: Map<string, any> //we might need a game interface here
     gameSessions: Map<string, any>
-    GFM: GameFactoryManager
+    //GFM: GameFactoryManager
 
     constructor() {
         this.gameTypes = new Map();
         this.gameSessions = new Map();
-        this.GFM = new GameFactoryManager();
+        //this.GFM = new GameFactoryManager();
     }
 
 
