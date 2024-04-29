@@ -76,17 +76,25 @@ export class BetPool {
         this.fundsLocked -= total;
     }
 
-    // sends any outstanding funds to the DAO wallet
-    close() {
-        // @TODO wallet integration
-        // @TODO define default DAO wallet
-        if (this.fundsLocked > BigInt(0)) {
-            // send funds to DAO
-            this.wallet.transferERC20(getAddress(ERC20_TOKEN), POOL_ADDRESS, DAO_ADDRESS, this.fundsLocked);
+    async transferFunds(token: string, from: string, to: string, amount: bigint) {
+        try {
+            await this.wallet.transferERC20(getAddress(token), from, to, amount);
+        } catch (error) {
+            console.error(`Error transferring funds: ${error}`);
+            throw new Error('Fund transfer failed');
         }
+    }
 
-        // delete poolx wallet from the wallet integration /*this may not be possible with the functions exposed from deroll but we are anyways initializing new wallet for each game"
-        // @TODO 
+    // sends any outstanding funds to the DAO wallet
+    async close() {
+        if (this.fundsLocked > BigInt(0)) {
+            try {
+                await this.transferFunds(ERC20_TOKEN, POOL_ADDRESS, DAO_ADDRESS, this.fundsLocked);
+                this.fundsLocked = BigInt(0); 
+            } catch (error) {
+                console.error('Failed to transfer funds to DAO, keeping funds locked.');
+            }
+        }
     }
 }
 
@@ -165,32 +173,42 @@ export class Game {
         //can be removed
     }
     makeBet = (_bet: Bet) => {
-        let player = this.playersBets.get(_bet.player);
-        if (player == undefined) {
-            this.playerIds.push(_bet.player);
-            player = new Map();
-            player.set(_bet.player, [_bet]);
-            this.playersBets.set(_bet.player, player);
+        let playerBets = this.playersBets.get(_bet.player);
+        if (!playerBets) {
+            // Initialize the new map for picks if this player hasn't placed any bets yet
+            playerBets = new Map();
+            this.playersBets.set(_bet.player, playerBets);
+        }
 
-        } else {
-            let bet = player.get(_bet.pick);
-            bet?.push(_bet);
-            this.playersBets.set(_bet.player, player);
+        // Get the array of bets for the specific pick
+        let bets = playerBets.get(_bet.pick);
+        if (!bets) {
+            // Initialize it as an array if it's the first bet for this pick
+            bets = [];
+            playerBets.set(_bet.pick, bets);
         }
-        this.betPool.addBet(_bet);
-        //@todo odds calculation and update
-    }
-    settle = async (_data: string, signature: Hex) => {
-        const winningPick = await this.verifyFun.run(this.betPool.picksBets, _data, signature);
-        //@TODO extra logic for multiple winning picks
-        if (!this.picks.includes(winningPick)) {
-            console.log("Invalid pick or draw");
-            this.betPool.payout("invalid");
-        } else {
-            this.betPool.payout("win", [winningPick]);
+        bets.push(_bet); // Add the bet to the array
+
+        this.betPool.addBet(_bet); // Add bet to the pool
+    };
+
+
+    async settle(_data: string, signature: Hex) {
+        try {
+            const winningPick = await this.verifyFun.run(this.betPool.picksBets, _data, signature);
+            if (!this.picks.includes(winningPick)) {
+                console.log("Invalid pick or draw");
+                this.betPool.payout("invalid");
+            } else {
+                this.betPool.payout("win", [winningPick]);
+            }
+        } catch (error) {
+            console.error(`Error during settlement: ${error}`);
+        } finally {
+            await this.betPool.close();
         }
-        this.betPool.close();
     }
+
 
 
 }

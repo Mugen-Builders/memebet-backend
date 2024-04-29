@@ -17,10 +17,11 @@ export default class Governance {
     addMember(address: Hex, msgSender: Hex) {
         if (this.isMember(msgSender)) {
             //We need to check also if the address is a member, or else there will be duplicate members added.
-            if(this.isMember(address)){
-            throw new Error("This address is already a member");
-            }else{
+            if(!this.isMember(address)){
             this.members.push(address);
+            }
+            else{
+            throw new Error("This address is already a member");
             }
         } else {
             throw new Error("Only members can add new members");
