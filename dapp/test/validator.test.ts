@@ -39,7 +39,73 @@ describe("DAOSignatureBlobChecker", () => {
         const signature = await wallet.signMessage({ account, message: data });
         expect(checker.verify(hash, signature)).resolves.toBe(false);
     })
+
+    test("should handle null or undefined hash and signature", async () => {
+        const governance = new Governance([publicTestKey]);
+        const checker = new DAOSignatureBlobChecker(governance);
+        await expect(checker.verify(null, "alice_signature_123")).rejects.toThrow();
+        await expect(checker.verify("hash_123", null)).rejects.toThrow();
+    });
+
+    test("should consistently verify the same signature", async () => {
+        const governance = new Governance([publicTestKey]);
+        const checker = new DAOSignatureBlobChecker(governance);
+        const data = "cata_123";
+        const hash = hashMessage(data);
+        const signature = await wallet.signMessage({ account, message: data });
+        const firstAttempt = await checker.verify(hash, signature);
+        const secondAttempt = await checker.verify(hash, signature);
+        expect(firstAttempt).toBe(secondAttempt);
+    });
+
+    test("should verify a signature when multiple members are in governance", async () => {
+        const multipleMembers = [publicTestKey, "0xAnotherMemberKey"];
+        const governance = new Governance(multipleMembers);
+        const checker = new DAOSignatureBlobChecker(governance);
+        const data = "multi-member data";
+        const hash = hashMessage(data);
+        const signature = await wallet.signMessage({ account, message: data });
+        expect(await checker.verify(hash, signature)).toBe(true);
+    });
+
+    test("should not verify any signature if governance list is empty", async () => {
+        const governance = new Governance([]);
+        const checker = new DAOSignatureBlobChecker(governance);
+        const data = "data_123";
+        const hash = hashMessage(data);
+        const signature = await wallet.signMessage({ account, message: data });
+        expect(await checker.verify(hash, signature)).toBe(false);
+    });
+
+    test("should fail verification if data is altered", async () => {
+        const governance = new Governance([publicTestKey]);
+        const checker = new DAOSignatureBlobChecker(governance);
+        const originalData = "original_data";
+        const alteredData = "corrupted_or_malicious_data";
+        const originalHash = hashMessage(originalData);
+        const signature = await wallet.signMessage({ account, message: originalData });
+        expect(await checker.verify(originalHash, signature)).toBe(true);
+        const alteredHash = hashMessage(alteredData);
+        expect(await checker.verify(alteredHash, signature)).toBe(false);
+    });
+
+    test("should not verify a signature from a non-member", async () => {
+        const nonMemberPubKey = "0x123456789abcdef"; 
+        const governance = new Governance([nonMemberPubKey]);
+        const checker = new DAOSignatureBlobChecker(governance);
+        const data = "important data";
+        const hash = hashMessage(data);
+        const fakeSignature = await wallet.signMessage({ account, message: data }); 
+        expect(await checker.verify(hash, fakeSignature)).toBe(false);
+    });
+
+
+
+
+
 });
+
+
 
 
 describe("ValidatorFunctionRunner", () => {
@@ -136,4 +202,13 @@ describe("ValidatorFunctionRunner", () => {
         const runner = new ValidatorFunctionRunner(temp, checker);
         expect(runner.run(picks, alterateData, signature)).rejects.toThrow("Failed to verify dao signature");
     });
+
+    test("should run asynchronous validator functions", async () => {
+        const temp = `async (...args) => { return "async result"; }`;
+        const runner = new ValidatorFunctionRunner(temp, checker);
+        await expect(runner.run(new Map(), "data", "0x00")).resolves.toBe("async result");
+    });
+
+
+
 });
