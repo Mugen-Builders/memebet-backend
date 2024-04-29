@@ -14,7 +14,7 @@ export class BetPool {
     poolAddress: string
     fundsLocked = BigInt(0)
     picksBets: Map<string, Bet[]>;
-    effectiveBets: Map<string, bigint>; //this is a map of the amount bet against each bet at any point of time which will help us calculate the effective bet amount of a player
+    effectiveBets: Map<string, bigint>; //this is a map of the amount bet on each pick at any point of time which will help us calculate the effective bet amount of a player
     wallet: WalletApp
     constructor(picks: Array<string>, _wallet: WalletApp) {
         this.poolAddress = "0x01";
@@ -31,27 +31,22 @@ export class BetPool {
         // @TODO wallet integration
 
         this.fundsLocked += bet.amount;
-        const _effectiveBet = this.effectiveBets.get(bet.pick);
-        if (_effectiveBet) {
-            this.effectiveBets.set(bet.pick, _effectiveBet + bet.amount);
-        } else {
-            this.effectiveBets.set(bet.pick, bet.amount);
-        }
         this.wallet.transferERC20(getAddress(ERC20_TOKEN), bet.player, POOL_ADDRESS, bet.amount);
-        const newBet = this.calculateEffectiveAmount(bet);
+        const [newBet, _effectiveBet] = this.calculateEffectiveAmount(bet);
         this.picksBets.get(bet.pick)?.push(newBet);
+        this.effectiveBets.set(bet.pick, _effectiveBet);
     }
 
     //This function adds a simple algorithm to calculate the effective amount a player will win after placing a bet at any point in time.
     //More logic can be added to this depending on different scenarios.
-    calculateEffectiveAmount(bet: Bet): Bet {
-        const _effectiveBet = this.effectiveBets.get(bet.pick);
+    calculateEffectiveAmount(bet: Bet): [Bet, bigint] {
+        const _effectiveBet = this.effectiveBets.get(bet.pick)??BigInt(0) + bet.amount;
         let _effective_amount = bet.amount;
         if (_effectiveBet) {
-            _effective_amount = (bet.amount / _effectiveBet) * (this.fundsLocked - _effectiveBet);
+            _effective_amount = bet.amount + (bet.amount / _effectiveBet) * (this.fundsLocked - _effectiveBet);
         }
         bet.effectiveAmount = _effective_amount;
-        return bet;
+        return [bet, _effectiveBet];
     }
 
     payout(mode: "win" | "invalid", winningPicks?: Array<string>) {
@@ -90,40 +85,12 @@ export class BetPool {
             this.wallet.transferERC20(getAddress(ERC20_TOKEN), POOL_ADDRESS, DAO_ADDRESS, this.fundsLocked);
         }
 
-        // delete pool wallet from the wallet integration /*this may not be possible with the functions exposed from deroll but we are anyways initializing new wallet for each game"
+        // delete poolx wallet from the wallet integration /*this may not be possible with the functions exposed from deroll but we are anyways initializing new wallet for each game"
         // @TODO 
     }
 }
 
-// Manages a betting session/game
-// After approving a new GameFactoryManager, we have a factory of bet games
-//  ie: GameFactoryManager.create(Soccer games instructions) --> soccerInstanceFactory
-//      soccerInstanceFactory.create(BR VS Italy) --> new bet game
-//  This will be used to establish the new types of bets and categories (soccer, CSGO, coinflip...)
-export class GameFactoryManager {
-    Games: Map<string, any>
-    constructor() {
-        this.Games = new Map();
-    }
-    newFactory(...args: any[]) {
-        return new GameFactory(args);
-    }
-    getGame(name: string) {
-        const factory = this.Games.get(name);
-        return factory;
-    }
-}
-// Manages the creation of game instaces
-// A factory knows the rules, the validator function
-export class GameFactory {
-    instances: Map<string, any>;
-    name: string
-    constructor(...args: any[]) {
-        this.instances = new Map();
-        this.name = args[0];
-    }
 
-}
 // Higher level manager for all things bet
 // Handles the creation and listing of new models
 // Handles the creation and listing of new games
