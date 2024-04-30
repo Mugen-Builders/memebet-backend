@@ -1,7 +1,7 @@
 
 import { App } from "@deroll/core";
 import { WalletApp } from "@deroll/wallet";
-import { Game, BetPool } from "../bets";
+import { Game, BetPool, BetsManager } from "../bets";
 import { decodeFunctionData, parseAbi } from "viem"; 
 
 import { AdvanceRequestData, RequestHandlerResult } from "../types";
@@ -16,7 +16,7 @@ export type BasicArgs = {
     app: App;
     wallet: WalletApp;
     metadata: AdvanceRequestData["metadata"];
-    // game: Game //@TODO should be game manager here (singleton)
+    betsManager: BetsManager;
   };
   
 
@@ -26,7 +26,7 @@ type Handlers = { [key in string]: HandlerFunction };
 const handlers = { ...wallet.handlers } as Handlers;
 const abi = [...wallet.abi];
 
-export default async (app:App, wallet:WalletApp) => {
+export default async (app: App, wallet: WalletApp, betsManager: BetsManager) => {
     // Handling incoming blockchain commands
     app.addAdvanceHandler(async ({ payload, metadata }: AdvanceRequestData) => {
         try {
@@ -35,7 +35,7 @@ export default async (app:App, wallet:WalletApp) => {
             const handler = handlers[functionName as string];
 
             if(handler) {
-                return handler({inputArgs:args, app, wallet, metadata});
+                return handler({inputArgs:args, app, wallet, metadata, betsManager});
             } 
             return "reject";
         } catch (error) {

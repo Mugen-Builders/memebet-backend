@@ -102,15 +102,23 @@ export class BetPool {
 // Higher level manager for all things bet
 // Handles the creation and listing of new models
 // Handles the creation and listing of new games
-export abstract class BetsManager {
+export class BetsManager {
+    //Changed implementation to support singleton
     gameTypes: Map<string, any> //we might need a game interface here
     gameSessions: Map<string, any>
-    //GFM: GameFactoryManager
+    private static instance: BetsManager;
 
     constructor() {
         this.gameTypes = new Map();
         this.gameSessions = new Map();
         //this.GFM = new GameFactoryManager();
+    }
+
+    public static getInstance(): BetsManager {
+        if (!BetsManager.instance) {
+            BetsManager.instance = new BetsManager();
+        }
+        return BetsManager.instance;
     }
 
 
