@@ -28,13 +28,13 @@ describe('BetPool', () => {
         };
 
         // Add the single bet
-        betPool.addBet(bet);
+        betPoolSingle.addBet(bet);
 
         // Check if the funds are locked correctly
-        expect(betPool.fundsLocked).toEqual(BigInt(500));
+        expect(betPoolSingle.fundsLocked).toEqual(BigInt(500));
 
         // Retrieve the bet to check the effective amount
-        const bets = betPool.picksBets.get("football");
+        const bets = betPoolSingle.picksBets.get("football");
         expect(bets.length).toBe(1);
         expect(bets[0].effectiveAmount).toEqual(BigInt(500)); 
 
@@ -42,7 +42,7 @@ describe('BetPool', () => {
         expect(mockWallet.transferERC20).toHaveBeenCalledWith(
             expect.anything(), 
             bet.player,
-            betPool.poolAddress,
+            betPoolSingle.poolAddress,
             bet.amount
         );
     });
