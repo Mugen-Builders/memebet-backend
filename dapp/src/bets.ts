@@ -139,6 +139,10 @@ export class BetsManager {
         } // teams, dates, championshi
 
     }
+
+    getGameById(gameId: string): Game | undefined {
+        return this.gameSessions.get(gameId);
+    }
 }
 
 
