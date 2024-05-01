@@ -1,6 +1,6 @@
 
 import { Hex }  from "viem";
-import { components, paths } from "./schema";
+import { components } from "./schema";
 
 
 export type AdvanceRequestData = components["schemas"]["Advance"];

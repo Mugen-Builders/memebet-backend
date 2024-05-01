@@ -1,8 +1,8 @@
 
 import { App } from "@deroll/core";
 import { WalletApp } from "@deroll/wallet";
-import { Game, BetPool, BetsManager } from "../bets";
-import { decodeFunctionData, parseAbi } from "viem"; 
+import { Game, BetsManager } from "../bets";
+import { decodeFunctionData } from "viem"; 
 
 import { AdvanceRequestData, RequestHandlerResult } from "../types";
 
@@ -27,7 +27,6 @@ const handlers = { ...wallet.handlers } as Handlers;
 const abi = [...wallet.abi];
 
 export default async (app: App, wallet: WalletApp, betsManager: BetsManager) => {
-    // Handling incoming blockchain commands
     app.addAdvanceHandler(async ({ payload, metadata }: AdvanceRequestData) => {
         try {
             const { functionName, args } = decodeFunctionData({ abi, data: payload });

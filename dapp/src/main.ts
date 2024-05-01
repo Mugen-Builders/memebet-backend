@@ -9,7 +9,6 @@ import inspectHandlers from "./inspect";
 const app = createApp({ url: "http://localhost:8080/rollups" });
 const wallet = createWallet();
 
-//@TODO create GameManager instance here and pass it down to all handlers
 const betsManager = BetsManager.getInstance();
 
 advanceHandlers(app, wallet, betsManager);

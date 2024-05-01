@@ -1,5 +1,3 @@
-import { App } from "@deroll/core";
-import { WalletApp } from "@deroll/wallet";
 import { toHex } from "viem";
 
 import { BasicArgs } from "./index";

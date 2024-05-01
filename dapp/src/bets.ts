@@ -180,10 +180,6 @@ export class Game {
     getPlayer = (player: string) => {
         return { player: player, Bet: this.playersBets.get(player) }
     }
-    calculateOdds = () => {
-        //added this logic into the bet pool 
-        //can be removed
-    }
     makeBet = (_bet: Bet) => {
         let playerBets = this.playersBets.get(_bet.player);
         if (!playerBets) {

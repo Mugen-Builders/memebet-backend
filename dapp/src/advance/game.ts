@@ -3,7 +3,7 @@ import { WalletApp } from "@deroll/wallet";
 import { toHex } from "viem";
 
 import { BasicArgs } from ".";
-import { BetPool, Game } from "../bets";
+import { Game } from "../bets";
 
 const createGame = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, betsManager } = args;
@@ -19,7 +19,6 @@ const createGame = async (args: BasicArgs) => {
 const placeBet = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, betsManager } = args;
   const { gameid, player, pick, amount } = inputArgs;
-   //@TODO FIX to use game manager instance
   const game = betsManager.gameSessions.get(gameid);
   if (game) {
     game.makeBet({
