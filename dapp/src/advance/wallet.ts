@@ -1,23 +1,67 @@
 import { toHex } from "viem";
+import { App } from "@deroll/core";
 
 import { BasicArgs } from "./index";
 
+import { AdvanceRequestHandler } from "../types";
+import {
+  WalletApp, isEtherDeposit,
+  isERC20Deposit,
+  isERC721Deposit,
+  isERC1155SingleDeposit,
+  isERC1155BatchDeposit,
+  parseERC1155BatchDeposit,
+  parseERC1155SingleDeposit,
+  parseERC20Deposit,
+  parseERC721Deposit,
+  parseEtherDeposit,
+} from "@deroll/wallet";
 
-const depositTokens = async (args: BasicArgs) => {
-  const { inputArgs, app, wallet, metadata } = args;
-  try {
-    const { tokenAddress, to, depositAmount } = inputArgs;
-    wallet.transferERC20(tokenAddress, metadata.msg_sender, to, depositAmount);
-    app.createNotice({
-      payload: toHex(
-        `The account ${metadata.msg_sender} is transferring ${depositAmount} tokens ${tokenAddress} from ${metadata.msg_sender} to ${to} at ${metadata.timestamp}`
-      ),
-    });
-    return "accept";
-  } catch (error) {
-    console.error("Error processing command:", error);
-    return "reject";
-  }
+
+export const addTokensDepositHandler = (app: App, wallet: WalletApp) => {
+  const handler: AdvanceRequestHandler = async (data) => {
+    try {
+      const result = await wallet.handler(data);
+      
+      if (result === "reject") return result;
+      
+      let msg = '';
+      if (isEtherDeposit(data)) {
+        let { sender, value } = parseEtherDeposit(data.payload);
+        msg = `${sender} deposited ${value} ether`;
+      }
+      if (isERC20Deposit(data)) {
+        let { success, token, sender, amount } = parseERC20Deposit(
+          data.payload,
+        );
+        msg = success ? `${sender} deposited ${amount} of ${token}` : `${sender} failed to deposit ${amount} of ${token}`;
+      }
+      if (isERC721Deposit(data)) {
+        const { sender, token, tokenId } = parseERC721Deposit(data.payload);
+        msg = `${sender} deposited ${tokenId} of 721 ${token}`;
+      }
+      if (isERC1155SingleDeposit(data)) {
+        const { sender, token, tokenId, value } = parseERC1155SingleDeposit(
+          data.payload,
+        );
+        msg = `${sender} deposited single ${tokenId} of 1155 ${token}`;
+      }
+      if (isERC1155BatchDeposit(data)) {
+        const { sender, token, tokenIds, values } =
+          parseERC1155BatchDeposit(data.payload);
+          msg = `${sender} deposited batch of ${tokenIds.length} tokens of 1155 ${token}: [${values}]`;
+      }
+
+      app.createNotice({
+        payload: toHex(msg),
+      });
+      return "accept";
+    } catch (error) {
+      console.error("Error processing command:", error);
+      return "reject";
+    }
+  };
+  app.addAdvanceHandler(handler);
 };
 
 const withdrawTokens = async (args: BasicArgs) => {
@@ -40,12 +84,10 @@ const withdrawTokens = async (args: BasicArgs) => {
 };
 
 export const handlers = {
-  depositTokens,
   withdrawTokens
 }
 
 
 export const abi = [
-  "function depositTokens(address tokenAddress, address to, uint256 depositAmount)",
   "function withdrawTokens(address tokenAddress, uint256 withdrawAmount)"
 ]

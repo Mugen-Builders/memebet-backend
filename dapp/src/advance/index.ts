@@ -6,7 +6,7 @@ import { decodeFunctionData } from "viem";
 
 import { AdvanceRequestData, RequestHandlerResult } from "../types";
 
-import * as wallet from "./wallet";
+import * as walletHandlers from "./wallet";
 
 //@TODO this needs to be refactored and become just GameFactory
 const games = new Map<string, Game>();
@@ -23,10 +23,12 @@ export type BasicArgs = {
 type HandlerFunction = (args:BasicArgs) => Promise<RequestHandlerResult>;
 type Handlers = { [key in string]: HandlerFunction };
 
-const handlers = { ...wallet.handlers } as Handlers;
-const abi = [...wallet.abi];
+const handlers = { ...walletHandlers.handlers } as Handlers;
+const abi = [...walletHandlers.abi];
 
 export default async (app: App, wallet: WalletApp, betsManager: BetsManager) => {
+    walletHandlers.addTokensDepositHandler(app, wallet);
+
     app.addAdvanceHandler(async ({ payload, metadata }: AdvanceRequestData) => {
         try {
             const { functionName, args } = decodeFunctionData({ abi, data: payload });
