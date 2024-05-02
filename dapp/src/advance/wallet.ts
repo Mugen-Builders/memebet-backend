@@ -1,4 +1,4 @@
-import { toHex } from "viem";
+import { parseAbi, toHex } from "viem";
 import { App } from "@deroll/core";
 
 import { BasicArgs } from "./index";
@@ -64,7 +64,7 @@ export const addTokensDepositHandler = (app: App, wallet: WalletApp) => {
   app.addAdvanceHandler(handler);
 };
 
-const withdrawTokens = async (args: BasicArgs) => {
+const withdrawTokens = async (args: BasicArgs): Promise<"accept" | "reject"> => {
   const { inputArgs, app, wallet, metadata } = args;
   try {
     const { tokenAddress, withdrawAmount } = inputArgs;
@@ -87,7 +87,6 @@ export const handlers = {
   withdrawTokens
 }
 
-
-export const abi = [
+export const abi = parseAbi([
   "function withdrawTokens(address tokenAddress, uint256 withdrawAmount)"
-]
+]);
