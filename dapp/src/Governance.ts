@@ -4,19 +4,28 @@ import { Hex } from "viem";
 // used in the creation of new bet models
 // Can we leverage the DSG for DAOs?
 export default class Governance {
-    members: Array<Hex>
+    members: Array<string>
 
-    constructor(members: Array<Hex>) {
+    constructor(members: Array<string>) {
         this.members = members;
     }
+    private static instance:Governance;
 
-    isMember(address: Hex) {
-        return this.members.includes(address);
+    public static getInstance(): Governance {
+        if (!Governance.instance) {
+            Governance.instance = new Governance(["0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"]);
+        }
+        return Governance.instance;
     }
 
-    addMember(address: Hex, msgSender: Hex) {
-        if (this.isMember(msgSender)) {
-            if(!this.isMember(address)){
+    isMember(address: string) {
+        return this.members.includes(address.toLowerCase());
+    }
+
+    addMember(address: string, msgSender: string) {
+        address.toLowerCase()
+        if (this.isMember(msgSender.toLowerCase())) {
+            if (!this.isMember(address)){
             this.members.push(address);
             }
             else{
