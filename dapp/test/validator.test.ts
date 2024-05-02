@@ -13,7 +13,7 @@ import { Bet, VFR, PlayerBet } from "../src/types";
 
 describe("DAOSignatureBlobChecker", () => {
     const privateTestKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-    const publicTestKey = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    const publicTestKey = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
     let wallet: WalletClient
     let account: PrivateKeyAccount
     beforeAll(() => {
@@ -110,7 +110,7 @@ describe("DAOSignatureBlobChecker", () => {
 
 describe("ValidatorFunctionRunner", () => {
     const privateTestKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-    const publicTestKey = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    const publicTestKey = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
     let wallet: WalletClient
     let account: PrivateKeyAccount
     let governance: Governance
