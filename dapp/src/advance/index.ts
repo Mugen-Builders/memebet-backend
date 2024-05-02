@@ -2,13 +2,13 @@
 import { App } from "@deroll/core";
 import { WalletApp } from "@deroll/wallet";
 import { Game, BetsManager } from "../bets";
-import { decodeFunctionData } from "viem"; 
+import { decodeFunctionData, toHex } from "viem"; 
 
 import { AdvanceRequestData, RequestHandlerResult } from "../types";
 
 import * as walletHandlers from "./wallet";
+import * as betHandlers from "./game";
 
-//@TODO this needs to be refactored and become just GameFactory
 const games = new Map<string, Game>();
 
 export type BasicArgs = {
@@ -23,12 +23,13 @@ export type BasicArgs = {
 type HandlerFunction = (args:BasicArgs) => Promise<RequestHandlerResult>;
 type Handlers = { [key in string]: HandlerFunction };
 
-const handlers = { ...walletHandlers.handlers } as Handlers;
-const abi = [...walletHandlers.abi];
+const handlers: Handlers = {
+    ...betHandlers.handlers,
+    ...walletHandlers.handlers
+};
+const abi = [...betHandlers.abi];
 
 export default async (app: App, wallet: WalletApp, betsManager: BetsManager) => {
-    walletHandlers.addTokensDepositHandler(app, wallet);
-
     app.addAdvanceHandler(async ({ payload, metadata }: AdvanceRequestData) => {
         try {
             const { functionName, args } = decodeFunctionData({ abi, data: payload });
