@@ -6,7 +6,7 @@ import { Hex } from "viem";
 export default class Governance {
     members: Array<string>
 
-    constructor(members: Array<string>) {
+    private constructor(members: Array<string>) {
         this.members = members;
     }
     private static instance:Governance;
