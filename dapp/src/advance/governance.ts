@@ -14,19 +14,12 @@ const removeMember: HandlerFunction = async (args: BasicArgs) => {
     return "reject";
 }
 
-const listMembers: HandlerFunction = async (args: BasicArgs) => {
-    // @todo list members
-    return "reject";
-}
-
 export const handlers = {
     addMember,
-    removeMember,
-    listMembers
+    removeMember
 };
 
 export const abi = [
     "function addMember(address)",
-    "function removeMember(address)",
-    "function listMembers()"
+    "function removeMember(address)"
 ]

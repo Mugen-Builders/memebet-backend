@@ -1,18 +1,22 @@
 import Game from './Game';
-
+import { WalletApp, createWallet } from '@deroll/wallet';
+import { Hex } from 'viem';
+import { ValidatorManager } from './validator';
 
 // Higher level manager for all things bet
 // Handles the creation and listing of new models
 // Handles the creation and listing of new games
 export default class AppManager {
-    //Changed implementation to support singleton
-    gameTypes: Map<string, any> //we might need a game interface here
-    gameSessions: Map<string, any>
     private static instance: AppManager;
+    private static wallet: WalletApp;
+    private static validatorManager: ValidatorManager;
 
-    constructor() {
-        this.gameTypes = new Map();
-        this.gameSessions = new Map();
+    activeGames: Map<string, Game>;
+    
+    private constructor() {
+        this.activeGames = new Map<string, Game>();
+        AppManager.wallet = createWallet();
+        AppManager.validatorManager = ValidatorManager.getInstance();
     }
 
     public static getInstance(): AppManager {
@@ -22,23 +26,37 @@ export default class AppManager {
         return AppManager.instance;
     }
 
-    createNewGameType(...args: any[]) { //only DAO
-        this.gameTypes.set(args[0], new Game(args[1], args[2], args[3], args[4], args[5]));
+    public getWallet(): WalletApp {
+        return AppManager.wallet;
     }
 
-    createNewGame(_type: any) {
+    //@todo createGame needs to get a "verify function" name string here
+    //use Validator Manager to resolve the name into actual ValidatorFunctionRunner
+    createGame(picks: Array<string>, start: number, end: number, tokenAddress: Hex /**VFun here */) {
+        const game = new Game(picks, start, end, tokenAddress, AppManager.wallet);
+        this.activeGames.set(game.id, game);
+        return game;
+    }
 
-        const factoryInstance = <Game>this.gameTypes.get(_type);
-        if (factoryInstance) {
-            //@To-do create a new game
-        } else {
-            console.log(`game type:${_type} not supported by the platform make a proposal to our dao to add this game type`);
-            return
-        } // teams, dates, championshi
-
+    async closeGame(gameId: string, data: string, signature:Hex) {
+        const game = this.activeGames.get(gameId);
+        if (game === undefined ) {
+            throw new Error("No Game found");
+        }
+        await game.settle(data, signature);
+        this.activeGames.delete(gameId);
     }
 
     getGameById(gameId: string): Game | undefined {
-        return this.gameSessions.get(gameId);
+        return this.activeGames.get(gameId);
+    }
+
+    listActiveGames() {
+        //@TODO might be interesting adding extra info such as bets per game
+        const games = [];
+        for (const game of this.activeGames) {
+            games.push(game);
+        }
+        return games;
     }
 }

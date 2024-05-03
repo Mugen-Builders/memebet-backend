@@ -9,10 +9,16 @@ export class ValidatorManager {
 
     functions: Map<string, VFR>;
 
-    constructor() {
+    private constructor() {
         this.functions = new Map();
     }
-
+    private static instance: ValidatorManager;
+    public static getInstance(): ValidatorManager {
+        if (!ValidatorManager.instance) {
+            ValidatorManager.instance = new ValidatorManager();
+        }
+        return ValidatorManager.instance;
+    }
     createNewValidator(name: string, fn: VFR) {
         this.functions.set(name, fn);
     }

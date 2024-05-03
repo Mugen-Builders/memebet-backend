@@ -3,7 +3,7 @@ import { BasicArgs } from ".";
 import Game from "../Game";
 
 const createGame = async (args: BasicArgs) => {
-  const { inputArgs, app, wallet, metadata, betsManager, governance } = args;
+  const { inputArgs, app, wallet, metadata, appManager, governance } = args;
 
   // only members can create games
   if (!governance.isMember(metadata.msg_sender)) {
@@ -19,9 +19,8 @@ const createGame = async (args: BasicArgs) => {
   let pickAway = fromHex(away, 'string').replace(/ +/g, '');
 
   let picks: string[] = [pickHome, pickAway];
-  if (!betsManager.gameSessions.has(id)) {
-    const newGame = new Game(picks, start, end, token, validatorFunctionRunner, wallet);
-    betsManager.gameSessions.set(id, newGame);
+  if (!appManager.activeGames.has(id)) {
+    appManager.createGame(picks, start, end, token);
     app.createNotice({
       payload: toHex("Game Created Sucessfully!"),
     });
@@ -34,11 +33,19 @@ const createGame = async (args: BasicArgs) => {
   return "accept";
 };
 
+const closeGame = async (args: BasicArgs) => {
+  const { inputArgs, app, wallet, metadata, appManager } = args;
+  //@TODO
+  //appManager.closeGame(id);
+};
+const getGames = async (args: BasicArgs) => {
+  const { inputArgs, app, wallet, metadata } = args;
+}
 
 const placeBet = async (args: BasicArgs) => {
-  const { inputArgs, app, wallet, metadata, betsManager } = args;
+  const { inputArgs, app, wallet, metadata, appManager } = args;
   const { gameid, player, pick, amount } = inputArgs;
-  const game = betsManager.gameSessions.get(gameid);
+  const game = appManager.getGameById(gameid);
   if (game) {
     game.makeBet({
       pick,
@@ -55,11 +62,13 @@ const placeBet = async (args: BasicArgs) => {
 
 export const handlers = {
   createGame,
-  placeBet
+  closeGame,
+  placeBet,
 }
 
 
 export const abi = [
   "function createGame(bytes32, bytes32, bytes32, bytes32, uint256, uint256)",
-  "function placeBet(bytes32 gameid, address player, bytes32 pick, uint256 amount)"
+  "function closeGame(@TODO PARAMS)",
+  "function placeBet(bytes32 gameid, address player, bytes32 pick, uint256 amount)",
 ];

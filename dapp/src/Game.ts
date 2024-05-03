@@ -1,9 +1,10 @@
 import { Hex, getAddress } from "viem";
 import { Bet, VFR, PlayerBet } from "./types";
-import { ValidatorFunctionRunner } from "./validator";
+import { DAOSignatureBlobChecker, ValidatorFunctionRunner } from "./validator";
 import { WalletApp } from "@deroll/wallet";
 import { v4 as uuidv4 } from 'uuid';
 import BetPool from "./BetPool";
+import Governance from "./Governance";
 
 export default class Game {
     getInfo(): any {
@@ -23,7 +24,7 @@ export default class Game {
 
     betPool: BetPool
     wallet: WalletApp
-    constructor(_picks: Array<string>, start: number, end: number, tokenAddress: Hex, verifyFun: ValidatorFunctionRunner, _wallet: WalletApp) {
+    constructor(_picks: Array<string>, start: number, end: number, tokenAddress: Hex, _wallet: WalletApp) {
         this.id = uuidv4();
         this.playersBets = new Map();
         this.picks = _picks;
@@ -35,7 +36,8 @@ export default class Game {
         this.startTime = start;
         this.endTime = end;
         this.playerIds = [];
-        this.verifyFun = verifyFun;
+        // @TODO correct this, should get a true function here
+        this.verifyFun = new ValidatorFunctionRunner("", new DAOSignatureBlobChecker(Governance.getInstance()))
         this.wallet = _wallet
         this.betPool = new BetPool(_picks, tokenAddress, _wallet);
     }

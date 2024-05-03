@@ -1,18 +1,18 @@
 import { InspectHandlers } from ".";
 
-export const register:InspectHandlers = ({app, wallet, router, games}) => {
+export const register:InspectHandlers = ({app, wallet, router, appManager}) => {
     router.add<{ gameId: string }>(
-        "game/:gameId",
+        "games/getGame/:gameId",
         ({ params: { gameId } }) => {
-            const game = games.get(gameId);
+            const game = appManager.getGameById(gameId);
             if (!game) return "Game not found";
             return JSON.stringify(game.getInfo());
         }
     );
     
-    router.add("currentBets",
+    router.add("games/currentBets",
         () => {
-            const allBets = Array.from(games.values()).map(game => ({
+            const allBets = Array.from(appManager.activeGames.values()).map(game => ({
                 gameId: game.id,
                 bets: game.getInfo()
             }));
