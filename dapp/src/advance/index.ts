@@ -2,7 +2,7 @@
 import { App } from "@deroll/core";
 import { WalletApp } from "@deroll/wallet";
 import { Game, BetsManager } from "../bets";
-import { decodeFunctionData, toHex } from "viem";
+import { decodeFunctionData, parseAbi } from "viem";
 
 import { AdvanceRequestData, RequestHandlerResult } from "../types";
 
@@ -18,6 +18,7 @@ export type BasicArgs = {
     wallet: WalletApp;
     metadata: AdvanceRequestData["metadata"];
     betsManager: BetsManager;
+    governance: Governance
 };
 
 
@@ -28,9 +29,9 @@ const handlers: Handlers = {
     ...betHandlers.handlers,
     ...walletHandlers.handlers
 };
-const abi = [...betHandlers.abi];
+const abi = parseAbi([...betHandlers.abi, ...walletHandlers.abi]);
 
-export default async (app: App, wallet: WalletApp, betsManager: BetsManager, governanceWallets: Governance) => {
+export default async (app: App, wallet: WalletApp, betsManager: BetsManager, governance: Governance) => {
     app.addAdvanceHandler(async ({ payload, metadata }: AdvanceRequestData) => {
         try {
             const { functionName, args } = decodeFunctionData({ abi, data: payload });
@@ -39,16 +40,7 @@ export default async (app: App, wallet: WalletApp, betsManager: BetsManager, gov
                 console.warn(`No handler found for function: ${functionName}`);
                 return "reject";
             }
-
-            if (functionName === "createGame") {
-                if (governanceWallets.isMember(metadata.msg_sender)) {
-                    return handler({ inputArgs: args, app, wallet, metadata, betsManager });
-                } else {
-                    console.warn(`Access denied for user ${metadata.msg_sender} on createGame`);
-                    return "reject";
-                }
-            }
-            return handler({ inputArgs: args, app, wallet, metadata, betsManager });
+            return handler({ inputArgs: args, app, wallet, metadata, betsManager, governance });
         } catch (error) {
             console.error("Error processing command:", error);
             return "reject";

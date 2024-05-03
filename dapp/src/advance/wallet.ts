@@ -1,4 +1,4 @@
-import { parseAbi, toHex } from "viem";
+import { toHex } from "viem";
 import { App } from "@deroll/core";
 
 import { BasicArgs } from "./index";
@@ -87,6 +87,6 @@ export const handlers = {
   withdrawTokens
 }
 
-export const abi = parseAbi([
+export const abi = ([
   "function withdrawTokens(address tokenAddress, uint256 withdrawAmount)"
 ]);

@@ -3,23 +3,31 @@ import { BasicArgs } from ".";
 import { Game } from "../bets";
 
 const createGame = async (args: BasicArgs) => {
-  const { inputArgs, app, wallet, metadata, betsManager } = args;
-  const [id, home, away, start, validatorFunctionRunner, end ] = inputArgs;
+  const { inputArgs, app, wallet, metadata, betsManager, governance } = args;
+
+  // only members can create games
+  if (!governance.isMember(metadata.msg_sender)) {
+    app.createReport({
+      payload: toHex("Sender is not member of the DAO"),
+    });
+  }
+  //@TODO fix inputArgs; type and args don't match
+  const [id, home, away, start, validatorFunctionRunner, end] = inputArgs;
 
   //Just Testing
   let pickHome = fromHex(home, 'string').replace(/ +/g, '');
   let pickAway = fromHex(away, 'string').replace(/ +/g, '');
-  
-  let picks: string [] = [pickHome, pickAway];
+
+  let picks: string[] = [pickHome, pickAway];
   if (!betsManager.gameSessions.has(id)) {
     const newGame = new Game(picks, start, end, validatorFunctionRunner, wallet);
     betsManager.gameSessions.set(id, newGame);
     app.createNotice({
       payload: toHex("Game Created Sucessfully!"),
     });
-  }else{
+  } else {
     app.createReport({
-      payload: toHex("Game is not Created!"),
+      payload: toHex("Game already exists!"),
     });
     return "reject";
   }
@@ -46,12 +54,12 @@ const placeBet = async (args: BasicArgs) => {
 
 
 export const handlers = {
-    createGame,
-    placeBet
-  }
-  
-  
-  export const abi = parseAbi([
-    "function createGame(bytes32, bytes32, bytes32, bytes32, uint256, uint256)",
-    "function placeBet(bytes32 gameid, address player, bytes32 pick, uint256 amount)"
-  ]);
+  createGame,
+  placeBet
+}
+
+
+export const abi = [
+  "function createGame(bytes32, bytes32, bytes32, bytes32, uint256, uint256)",
+  "function placeBet(bytes32 gameid, address player, bytes32 pick, uint256 amount)"
+];
