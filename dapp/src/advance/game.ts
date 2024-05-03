@@ -1,8 +1,7 @@
-import { parseAbi, fromHex, toHex } from "viem";
-import { BasicArgs } from ".";
-import Game from "../Game";
+import { fromHex, toHex } from "viem";
+import { BasicArgs, HandlerFunction } from ".";
 
-const createGame = async (args: BasicArgs) => {
+const createGame: HandlerFunction = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, appManager, governance } = args;
 
   // only members can create games
@@ -33,16 +32,14 @@ const createGame = async (args: BasicArgs) => {
   return "accept";
 };
 
-const closeGame = async (args: BasicArgs) => {
+const closeGame: HandlerFunction = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, appManager } = args;
   //@TODO
   //appManager.closeGame(id);
+  return "reject";
 };
-const getGames = async (args: BasicArgs) => {
-  const { inputArgs, app, wallet, metadata } = args;
-}
 
-const placeBet = async (args: BasicArgs) => {
+const placeBet: HandlerFunction = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, appManager } = args;
   const { gameid, player, pick, amount } = inputArgs;
   const game = appManager.getGameById(gameid);
