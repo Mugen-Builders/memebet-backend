@@ -2,8 +2,6 @@ import { describe, test, expect, beforeEach, vi, beforeAll } from 'vitest';
 import { MockedObjectDeep } from '@vitest/spy';
 import { AdvanceRequestData, Bet, PlayerBet } from "../../src/types";
 import { Hex, toHex } from 'viem';
-
-import { BasicArgs } from '../../src/advance';
 import * as gameRoutes from "../../src/advance/game"
 
 import { createApp } from "@deroll/app";
