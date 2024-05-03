@@ -8,6 +8,7 @@ import { AdvanceRequestData, RequestHandlerResult } from "../types";
 
 import * as walletHandlers from "./wallet";
 import * as betHandlers from "./game";
+import * as governanceHandlers from "./governance";
 import Governance from "../Governance";
 
 const games = new Map<string, Game>();
@@ -22,14 +23,15 @@ export type BasicArgs = {
 };
 
 
-type HandlerFunction = (args: BasicArgs) => Promise<RequestHandlerResult>;
+export type HandlerFunction = (args: BasicArgs) => Promise<RequestHandlerResult>;
 type Handlers = { [key in string]: HandlerFunction };
 
 const handlers: Handlers = {
     ...betHandlers.handlers,
-    ...walletHandlers.handlers
+    ...walletHandlers.handlers,
+    ...governanceHandlers.handlers,
 };
-const abi = parseAbi([...betHandlers.abi, ...walletHandlers.abi]);
+const abi = parseAbi([...betHandlers.abi, ...walletHandlers.abi, ...governanceHandlers.abi]);
 
 export default async (app: App, wallet: WalletApp, betsManager: BetsManager, governance: Governance) => {
     walletHandlers.addTokensDepositHandler(app, wallet);
