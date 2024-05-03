@@ -32,6 +32,7 @@ const handlers: Handlers = {
 const abi = parseAbi([...betHandlers.abi, ...walletHandlers.abi]);
 
 export default async (app: App, wallet: WalletApp, betsManager: BetsManager, governance: Governance) => {
+    walletHandlers.addTokensDepositHandler(app, wallet);
     app.addAdvanceHandler(async ({ payload, metadata }: AdvanceRequestData) => {
         try {
             const { functionName, args } = decodeFunctionData({ abi, data: payload });
