@@ -1,7 +1,7 @@
 import { createApp } from "@deroll/app";
 import { createWallet } from "@deroll/wallet";
 import advanceHandlers from "./advance"; 
-import { BetsManager } from "./bets";
+import AppManager from "./AppManager";
 import inspectHandlers from "./inspect";
 import Governance from "./Governance";
 
@@ -10,11 +10,11 @@ const ROLLUP_SERVER = process.env.ROLLUP_HTTP_SERVER_URL || "http://127.0.0.1:80
 const app = createApp({ url: ROLLUP_SERVER });
 const wallet = createWallet();
 
-const betsManager = BetsManager.getInstance();
+const appManager = AppManager.getInstance();
 const governanceWallets = Governance.getInstance();
 
-advanceHandlers(app, wallet, betsManager, governanceWallets);
-const router = inspectHandlers(app, wallet, betsManager);
+advanceHandlers(app, wallet, appManager, governanceWallets);
+const router = inspectHandlers(app, wallet, appManager);
 app.addInspectHandler(router.handler);
 app.start().catch((error) => {
     console.error("Failed to start the application:", error);

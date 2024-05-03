@@ -1,7 +1,8 @@
 
 import { App } from "@deroll/core";
 import { WalletApp } from "@deroll/wallet";
-import { Game, BetsManager } from "../bets";
+import  AppManager from "../AppManager";
+import Game from '../Game';
 import { decodeFunctionData, parseAbi } from "viem";
 
 import { AdvanceRequestData, RequestHandlerResult } from "../types";
@@ -18,7 +19,7 @@ export type BasicArgs = {
     app: App;
     wallet: WalletApp;
     metadata: AdvanceRequestData["metadata"];
-    betsManager: BetsManager;
+    appManager: AppManager;
     governance: Governance
 };
 
@@ -33,7 +34,7 @@ const handlers: Handlers = {
 };
 const abi = parseAbi([...betHandlers.abi, ...walletHandlers.abi, ...governanceHandlers.abi]);
 
-export default async (app: App, wallet: WalletApp, betsManager: BetsManager, governance: Governance) => {
+export default async (app: App, wallet: WalletApp, appManager: AppManager, governance: Governance) => {
     walletHandlers.addTokensDepositHandler(app, wallet);
     app.addAdvanceHandler(async ({ payload, metadata }: AdvanceRequestData) => {
         try {
@@ -43,7 +44,7 @@ export default async (app: App, wallet: WalletApp, betsManager: BetsManager, gov
                 console.warn(`No handler found for function: ${functionName}`);
                 return "reject";
             }
-            return handler({ inputArgs: args, app, wallet, metadata, betsManager, governance });
+            return handler({ inputArgs: args, app, wallet, metadata, appManager, governance });
         } catch (error) {
             console.error("Error processing command:", error);
             return "reject";

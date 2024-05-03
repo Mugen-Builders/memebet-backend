@@ -1,6 +1,6 @@
 import { parseAbi, fromHex, toHex } from "viem";
 import { BasicArgs } from ".";
-import { Game } from "../bets";
+import Game from "../Game";
 
 const createGame = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, betsManager, governance } = args;
@@ -12,7 +12,7 @@ const createGame = async (args: BasicArgs) => {
     });
   }
   //@TODO fix inputArgs; type and args don't match
-  const [id, home, away, start, validatorFunctionRunner, end] = inputArgs;
+  const [id, home, away, token, start, validatorFunctionRunner, end] = inputArgs;
 
   //Just Testing
   let pickHome = fromHex(home, 'string').replace(/ +/g, '');
@@ -20,7 +20,7 @@ const createGame = async (args: BasicArgs) => {
 
   let picks: string[] = [pickHome, pickAway];
   if (!betsManager.gameSessions.has(id)) {
-    const newGame = new Game(picks, start, end, validatorFunctionRunner, wallet);
+    const newGame = new Game(picks, start, end, token, validatorFunctionRunner, wallet);
     betsManager.gameSessions.set(id, newGame);
     app.createNotice({
       payload: toHex("Game Created Sucessfully!"),

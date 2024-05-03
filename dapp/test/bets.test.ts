@@ -1,13 +1,16 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
-import { BetPool, Game } from '../src/bets';
+import BetPool from '../src/BetPool';
+import Game from '../src/Game';
 import { WalletApp } from "@deroll/wallet";
 import { ValidatorFunctionRunner } from "../src/validator";
 import { Bet, PlayerBet } from "../src/types";
+import { Hex } from 'viem';
 
 describe('BetPool', () => {
     let betPool: BetPool;
-    let betPoolSingle : BetPool;
+    let betPoolSingle: BetPool;
     let mockWallet: WalletApp;
+    let mockToken: Hex = '0x1234';
 
     beforeEach(() => {
         // Mock WalletApp for testing without actual wallet operations
@@ -15,13 +18,14 @@ describe('BetPool', () => {
             transferERC20: vi.fn(),
         } as unknown as WalletApp;
 
-        betPool = new BetPool(["football", "basketball"], mockWallet);
-        betPoolSingle = new BetPool(["football"], mockWallet);
+        betPool = new BetPool(["football", "basketball"],mockToken, mockWallet);
+        betPoolSingle = new BetPool(["football"], mockToken, mockWallet);
     });
 
     test('should correctly handle the effective amount calculation when only one bet is placed on a pick', () => {
         const bet = {
             pick: "football",
+            tokenAddress: mockToken,
             player: "0xPlayer1",
             amount: BigInt(500),
             effectiveAmount: BigInt(0) // Initialize to zero
@@ -35,12 +39,12 @@ describe('BetPool', () => {
 
         // Retrieve the bet to check the effective amount
         const bets = betPoolSingle.picksBets.get("football");
-        expect(bets.length).toBe(1);
-        expect(bets[0].effectiveAmount).toEqual(BigInt(500)); 
+        expect(bets!.length).toBe(1);
+        expect(bets![0]!.effectiveAmount).toEqual(BigInt(500));
 
         // Verify the wallet transfer call was made correctly
         expect(mockWallet.transferERC20).toHaveBeenCalledWith(
-            expect.anything(), 
+            expect.anything(),
             bet.player,
             betPoolSingle.poolAddress,
             bet.amount
@@ -50,6 +54,7 @@ describe('BetPool', () => {
     test('should add a bet and calculate the effective bet amount', () => {
         const bet: Bet = {
             pick: "football",
+            tokenAddress: mockToken,
             player: "0xPlayer",
             amount: BigInt(1000),
             effectiveAmount: BigInt(0)
@@ -69,8 +74,8 @@ describe('BetPool', () => {
 
     test('should handle payouts for winning picks correctly', () => {
         // Adding some bets
-        betPool.addBet({ pick: "football", player: "0xPlayer1", amount: BigInt(100), effectiveAmount: BigInt(0) });
-        betPool.addBet({ pick: "basketball", player: "0xPlayer2", amount: BigInt(200), effectiveAmount: BigInt(0) });
+        betPool.addBet({ pick: "football", tokenAddress: mockToken, player: "0xPlayer1", amount: BigInt(100), effectiveAmount: BigInt(0) });
+        betPool.addBet({ pick: "basketball", tokenAddress: mockToken, player: "0xPlayer2", amount: BigInt(200), effectiveAmount: BigInt(0) });
 
         // Trigger payout for winning pick
         betPool.payout("win", ["football"]);
@@ -80,22 +85,22 @@ describe('BetPool', () => {
     });
 
     test('should handle multiple bets on the same pick correctly', () => {
-        betPool.addBet({ pick: "football", player: "0xPlayer1", amount: BigInt(100), effectiveAmount: BigInt(0) });
-        betPool.addBet({ pick: "football", player: "0xPlayer2", amount: BigInt(200), effectiveAmount: BigInt(0) });
+        betPool.addBet({ pick: "football", tokenAddress: mockToken, player: "0xPlayer1", amount: BigInt(100), effectiveAmount: BigInt(0) });
+        betPool.addBet({ pick: "football", tokenAddress: mockToken, player: "0xPlayer2", amount: BigInt(200), effectiveAmount: BigInt(0) });
 
         expect(betPool.fundsLocked).toEqual(BigInt(300));
         const bets = betPool.picksBets.get("football");
-        expect(bets.length).toBe(2);
+        expect(bets!.length).toBe(2);
         expect(bets).toContainEqual(expect.objectContaining({ player: "0xPlayer1", amount: BigInt(100) }));
         expect(bets).toContainEqual(expect.objectContaining({ player: "0xPlayer2", amount: BigInt(200) }));
     });
 
     test('should calculate effective bet amounts correctly', () => {
-        betPool.addBet({ pick: "football", player: "0xPlayer1", amount: BigInt(100), effectiveAmount: BigInt(0) });
-        betPool.addBet({ pick: "football", player: "0xPlayer2", amount: BigInt(300), effectiveAmount: BigInt(0) });
+        betPool.addBet({ pick: "football", tokenAddress: mockToken, player: "0xPlayer1", amount: BigInt(100), effectiveAmount: BigInt(0) });
+        betPool.addBet({ pick: "football", tokenAddress: mockToken, player: "0xPlayer2", amount: BigInt(300), effectiveAmount: BigInt(0) });
 
-        const lastBet = betPool.picksBets.get("football")[1];
-        expect(lastBet.effectiveAmount).toBeGreaterThan(BigInt(0)); // Assuming some effective amount calculation logic
+        const lastBet = betPool.picksBets.get("football")![1];
+        expect(lastBet!.effectiveAmount).toBeGreaterThan(BigInt(0)); // Assuming some effective amount calculation logic
     });
     test('should transfer remaining funds to DAO when closing', () => {
         // Simulate some remaining funds
@@ -127,6 +132,8 @@ describe('Game', () => {
     let game: Game;
     let mockWallet: WalletApp;
     let mockValidatorFunctionRunner: ValidatorFunctionRunner;
+    let mockToken: Hex = '0x1234';
+
 
     beforeEach(() => {
         mockWallet = {
@@ -137,13 +144,14 @@ describe('Game', () => {
             run: vi.fn().mockResolvedValue("football"),
         } as unknown as ValidatorFunctionRunner;
 
-        game = new Game(["football", "basketball"], Date.now(), Date.now() + 3600000, mockValidatorFunctionRunner, mockWallet);
-        vi.spyOn(game.betPool, 'payout'); 
+        game = new Game(["football", "basketball"], Date.now(), Date.now() + 3600000,mockToken, mockValidatorFunctionRunner, mockWallet);
+        vi.spyOn(game.betPool, 'payout');
     });
 
     test('should make a bet and update player bets', () => {
         const bet: Bet = {
             pick: "football",
+            tokenAddress: mockToken,
             player: "0xPlayer",
             amount: BigInt(500),
             effectiveAmount: BigInt(0)
@@ -153,12 +161,12 @@ describe('Game', () => {
 
         const playerBets = game.playersBets.get("0xPlayer");
         expect(playerBets).toBeTruthy();
-        expect(playerBets.get(bet.pick)).toContainEqual(bet);
+        expect(playerBets!.get(bet.pick)).toContainEqual(bet);
     });
 
 
     test('should handle game settlement correctly', async () => {
-        game.makeBet({ pick: "football", player: "0xPlayer", amount: BigInt(1000), effectiveAmount: BigInt(0) });
+        game.makeBet({ pick: "football", tokenAddress: mockToken, player: "0xPlayer", amount: BigInt(1000), effectiveAmount: BigInt(0) });
 
         await game.settle("game data", "0xSignature");
 
@@ -168,18 +176,18 @@ describe('Game', () => {
     });
 
     test('should manage bets across different picks independently', () => {
-        game.makeBet({ pick: "football", player: "0xPlayer1", amount: BigInt(500), effectiveAmount: BigInt(0) });
-        game.makeBet({ pick: "basketball", player: "0xPlayer2", amount: BigInt(600), effectiveAmount: BigInt(0) });
+        game.makeBet({ pick: "football", tokenAddress: mockToken, player: "0xPlayer1", amount: BigInt(500), effectiveAmount: BigInt(0) });
+        game.makeBet({ pick: "basketball", tokenAddress: mockToken, player: "0xPlayer2", amount: BigInt(600), effectiveAmount: BigInt(0) });
 
-        const footballBets = game.playersBets.get("0xPlayer1").get("football");
-        const basketballBets = game.playersBets.get("0xPlayer2").get("basketball");
+        const footballBets = game.playersBets.get("0xPlayer1")!.get("football");
+        const basketballBets = game.playersBets.get("0xPlayer2")!.get("basketball");
 
         expect(footballBets).toContainEqual(expect.objectContaining({ amount: BigInt(500) }));
         expect(basketballBets).toContainEqual(expect.objectContaining({ amount: BigInt(600) }));
     });
 
     test('should handle invalid winning picks correctly', async () => {
-        game.makeBet({ pick: "football", player: "0xPlayer", amount: BigInt(1000), effectiveAmount: BigInt(0) });
+        game.makeBet({ pick: "football", tokenAddress: mockToken, player: "0xPlayer", amount: BigInt(1000), effectiveAmount: BigInt(0) });
 
         mockValidatorFunctionRunner.run.mockResolvedValue("invalid_pick"); // Simulate an invalid winning pick
         await game.settle("game data", "0xSignature");

@@ -1,10 +1,11 @@
 import { App } from "@deroll/core";
 import { WalletApp } from "@deroll/wallet";
 import { createRouter, Router } from "@deroll/router";
-import { BetsManager, Game } from "../bets";
+import AppManager from "../AppManager";
+import Game from "../Game";
 
-//@TODO this needs to be removed in favor of GameManager instance
-const games = new Map<string, Game>();
+
+
 export type InspectHandlerInput = {
   app: App;
   wallet: WalletApp;
@@ -15,7 +16,7 @@ export type InspectHandlers = (args:InspectHandlerInput) => void;
 
 import * as _games from "./games"; //@refactor this when done with GameManager
 
-export default (app: App, wallet: WalletApp , betsManager: BetsManager) => {
+export default (app: App, wallet: WalletApp , appManager: AppManager) => {
   const router = createRouter({ app });
 
   router.add<{ address: string }>(
@@ -26,7 +27,7 @@ export default (app: App, wallet: WalletApp , betsManager: BetsManager) => {
       });
     }
   );
-
+  // @todo fix with AppManager
   _games.register({app, wallet, router, games});
 
   return router;

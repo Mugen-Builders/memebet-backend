@@ -1,17 +1,18 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { createApp } from "@deroll/app";
 import { createWallet, WalletApp } from "@deroll/wallet";
-import { BetsManager } from "../src/bets";
+import  AppManager from "../src/AppManager";
 import advanceHandlers from "../src/advance";
 import inspectHandlers from "../src/inspect";
 import {Bet} from "../src/types"
+
 
 // Mock external dependencies as previously described
 vi.mock("@deroll/app", () => ({
     createApp: vi.fn(() => ({
         addAdvanceHandler: vi.fn(),
         addInspectHandler: vi.fn(),
-        start: vi.fn().mockResolvedValue(),
+        start: vi.fn().mockResolvedValue(0),
     })),
     createRouter: vi.fn(() => ({
         add: vi.fn(),
@@ -40,12 +41,12 @@ import { App } from '@deroll/core';
 import { createRouter } from '@deroll/router';
 
 describe('API Endpoints', () => {
-    let app: App, wallet: WalletApp, betsManager: BetsManager, router;
+    let app: App, wallet: WalletApp, appManager: AppManager, router;
 
     beforeEach(() => {
         app = createApp({ url: "http://localhost:8080/rollups" });
         wallet = createWallet();
-        betsManager = BetsManager.getInstance();
+        appManager = AppManager.getInstance();
         router = createRouter({ app });
     });
 
@@ -54,7 +55,7 @@ describe('API Endpoints', () => {
         const gameData = { id: "game123", picks: ["team1", "team2"], start: Date.now(), end: Date.now() + 1000 };
         const createGameHandler = vi.fn(() => Promise.resolve("Game Created"));
 
-        await advanceHandlers(app, wallet, betsManager);
+        await advanceHandlers(app, wallet, appManager);
         const result = await createGameHandler({ inputArgs: gameData, app, wallet, metadata: {} });
 
         expect(result).toBe("Game Created");
@@ -64,7 +65,7 @@ describe('API Endpoints', () => {
         const betData = { gameid: "game123", player: "player1", pick: "team1", amount: 100 };
         const placeBetHandler = vi.fn(() => Promise.resolve("Bet Placed"));
 
-        await advanceHandlers(app, wallet, betsManager);
+        await advanceHandlers(app, wallet, appManager);
         const result = await placeBetHandler({ inputArgs: betData, app, wallet, metadata: {} });
 
         expect(result).toBe("Bet Placed");
@@ -74,7 +75,7 @@ describe('API Endpoints', () => {
         const depositData = { tokenAddress: "0xToken", to: "0x123", depositAmount: 500 };
         const depositHandler = vi.fn(() => Promise.resolve("Deposit Successful"));
 
-        await advanceHandlers(app, wallet, betsManager);
+        await advanceHandlers(app, wallet, appManager);
         const result = await depositHandler({ inputArgs: depositData, app, wallet, metadata: {} });
 
         expect(result).toBe("Deposit Successful");
@@ -84,7 +85,7 @@ describe('API Endpoints', () => {
         const withdrawData = { tokenAddress: "0xToken", withdrawAmount: 300 };
         const withdrawHandler = vi.fn(() => Promise.resolve("Withdrawal Successful"));
 
-        await advanceHandlers(app, wallet, betsManager);
+        await advanceHandlers(app, wallet, appManager);
         const result = await withdrawHandler({ inputArgs: withdrawData, app, wallet, metadata: {} });
 
         expect(result).toBe("Withdrawal Successful");
@@ -93,7 +94,7 @@ describe('API Endpoints', () => {
     test('tests fetching game info endpoint', async () => {
         const gameInfoHandler = vi.fn(() => "Game Info");
 
-        await inspectHandlers(app, wallet, betsManager); 
+        await inspectHandlers(app, wallet, appManager); 
         const result = gameInfoHandler({ params: { gameId: "game123" } });
 
         expect(result).toBe("Game Info");
@@ -102,7 +103,7 @@ describe('API Endpoints', () => {
     test('tests fetching current bets endpoint', async () => {
         const currentBetsHandler = vi.fn(() => "Current Bets");
 
-        await inspectHandlers(app, wallet, betsManager); 
+        await inspectHandlers(app, wallet, appManager); 
         const result = currentBetsHandler();
 
         expect(result).toBe("Current Bets");
