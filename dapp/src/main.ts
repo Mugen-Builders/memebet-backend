@@ -1,6 +1,6 @@
 import { createApp } from "@deroll/app";
 import { createWallet } from "@deroll/wallet";
-import advanceHandlers from "./advance"; 
+import advanceHandlers from "./advance";
 import AppManager from "./AppManager";
 import inspectHandlers from "./inspect";
 import Governance from "./Governance";
@@ -11,10 +11,10 @@ const app = createApp({ url: ROLLUP_SERVER });
 const wallet = createWallet();
 
 const appManager = AppManager.getInstance();
-const governanceWallets = Governance.getInstance();
+const governance = Governance.getInstance();
 
-advanceHandlers(app, wallet, appManager, governanceWallets);
-const router = inspectHandlers(app, wallet, appManager);
+advanceHandlers(app, wallet, appManager, governance);
+const router = inspectHandlers(app, wallet, appManager, governance);
 app.addInspectHandler(router.handler);
 app.start().catch((error) => {
     console.error("Failed to start the application:", error);

@@ -40,8 +40,8 @@ const closeGame: HandlerFunction = async (args: BasicArgs) => {
 };
 
 const placeBet: HandlerFunction = async (args: BasicArgs) => {
-  const { inputArgs, app, wallet, metadata, appManager } = args;
-  const { gameid, player, pick, amount } = inputArgs;
+  const { inputArgs, appManager } = args;
+  const [ gameid, player, pick, amount ] = inputArgs;
   const game = appManager.getGameById(gameid);
   if (game) {
     game.makeBet({

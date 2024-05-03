@@ -5,6 +5,8 @@ import { WalletApp } from "@deroll/wallet";
 import { ValidatorFunctionRunner } from "../src/validator";
 import { Bet, PlayerBet } from "../src/types";
 import { Hex } from 'viem';
+//@TODO need to split this file into 2 files
+// betPool.test.ts and Game.test.ts
 
 describe('BetPool', () => {
     let betPool: BetPool;
