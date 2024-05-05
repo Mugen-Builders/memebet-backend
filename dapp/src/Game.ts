@@ -7,10 +7,6 @@ import BetPool from "./BetPool";
 import Governance from "./Governance";
 
 export default class Game {
-    getInfo(): any {
-        //TO-DO
-        throw new Error("Method not implemented.");
-    }
     id: string
     picks: Array<string>;
     currentOdds: Map<string, bigint>
@@ -62,6 +58,18 @@ export default class Game {
         bets.push(_bet); // Add the bet to the array
 
         this.betPool.addBet(_bet); // Add bet to the pool
+    };
+
+    getInfo = () => {
+        return {
+            id: this.id,
+            picks: this.picks,
+            startTime: this.startTime,
+            endTime: this.endTime,
+            fees: this.fees,
+            playerIds: Array.from(this.playersBets.keys()),
+            currentOdds: Array.from(this.currentOdds.entries())
+        };
     };
 
 
