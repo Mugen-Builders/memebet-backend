@@ -1,13 +1,12 @@
-
-import { describe, expect, test, beforeAll } from "vitest";
+import { describe, expect, test, beforeAll, beforeEach } from "vitest";
 import { hashMessage, createWalletClient, http, WalletClient, PrivateKeyAccount } from "viem";
 import { privateKeyToAccount } from "viem/accounts"
 import { mainnet } from "viem/chains";
 
-import { ValidatorFunctionRunner } from "../src/validator";
+import { ValidatorFunctionRunner, ValidatorManager } from "../src/validator";
 import { DAOSignatureBlobChecker } from "../src/DAOSignatureBlobChecker";
 import Governance from "../src/Governance";
-import { Bet, VFR, PlayerBet } from "../src/types";
+import { Bet, VFR } from "../src/types";
 
 describe("ValidatorFunctionRunner", () => {
     const privateTestKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
@@ -110,6 +109,46 @@ describe("ValidatorFunctionRunner", () => {
         await expect(runner.run(new Map(), "data", "0x00")).resolves.toBe("async result");
     });
 
+});
 
+describe('ValidatorManager', () => {
+    let manager: ValidatorManager;
+    const testValidatorFunction: VFR = async () => 'test_result';
 
+    beforeAll(() => {
+        manager = ValidatorManager.getInstance();
+    });
+
+    beforeEach(() => {
+        // Clear the validators map before each test
+        manager.functions = new Map();
+    });
+
+    test('should create a new validator', () => {
+        manager.createNewValidator('test_validator', testValidatorFunction);
+        const validator = manager.getValidator('test_validator');
+        expect(validator).toBe(testValidatorFunction);
+    });
+
+    test('should get an existing validator', () => {
+        manager.createNewValidator('existing_validator', testValidatorFunction);
+        const validator = manager.getValidator('existing_validator');
+        expect(validator).toBe(testValidatorFunction);
+    });
+
+    test('should list all validators', () => {
+        const validators = new Map([
+            ['validator1', testValidatorFunction],
+            ['validator2', async () => 'validator2_result'],
+        ]);
+
+        // Adding multiple validators
+        validators.forEach((fn, name) => {
+            manager.createNewValidator(name, fn);
+        });
+
+        const listedValidators = Array.from(manager.getValidators());
+
+        expect(listedValidators).toEqual(Array.from(validators.entries()));
+    });
 });
