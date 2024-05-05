@@ -16,6 +16,10 @@ const getPoolAddress = ():Hex => {
     return toHex(POOL_ADDRESS);
 }
 
+export const resetPoolAddress = () => {
+    POOL_ADDRESS = 0;
+};
+
 // Controls the funds for a bet
 // it handles the betting and settling of funds
 // and communicates directly to deroll-wallet and

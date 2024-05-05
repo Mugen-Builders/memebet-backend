@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
-import BetPool from '../src/BetPool';
+import BetPool, { resetPoolAddress } from '../src/BetPool';
 import { WalletApp } from "@deroll/wallet";
 import { Bet, PlayerBet } from "../src/types";
 import { Hex, toHex } from 'viem';
@@ -12,6 +12,7 @@ describe('BetPool', () => {
 
     beforeEach(() => {
         // Mock WalletApp for testing without actual wallet operations
+        resetPoolAddress();
         mockWallet = {
             transferERC20: vi.fn(),
         } as unknown as WalletApp;
