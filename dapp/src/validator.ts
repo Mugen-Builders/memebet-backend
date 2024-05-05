@@ -1,7 +1,7 @@
 import { recoverAddress, Hex } from "viem";
 
 import { VFR } from "./types";
-import Governance from "./Governance";
+import { DAOSignatureBlobChecker } from "./DAOSignatureBlobChecker";
 
 // Hanldes the creation and listing of new validator functions
 // Creation should be done by DAO only
@@ -47,25 +47,6 @@ export class ValidatorFunctionRunner {
 
     run: VFR = (...args) => {
         return this._function(...args, this.checkers);
-    }
-
-}
-
-
-// First data authenticity checker
-// Ensures data is trustworthy and hasn't been manipulated
-// Sets a standard to be extended by later by 
-// TLS checker, Blockchain checker and others
-export class DAOSignatureBlobChecker {
-    _governance: Governance;
-
-    constructor(governance: Governance) {
-        this._governance = governance;
-    }
-
-    async verify(hash: Hex, signature:Hex) {
-        const recoveredAddress = await recoverAddress({ hash, signature});
-        return this._governance.isMember(recoveredAddress);
     }
 
 }

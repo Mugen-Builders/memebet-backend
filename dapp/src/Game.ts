@@ -1,6 +1,7 @@
 import { Hex, getAddress } from "viem";
 import { Bet, VFR, PlayerBet } from "./types";
-import { DAOSignatureBlobChecker, ValidatorFunctionRunner } from "./validator";
+import { ValidatorFunctionRunner } from "./validator";
+import { DAOSignatureBlobChecker } from "./DAOSignatureBlobChecker";
 import { WalletApp } from "@deroll/wallet";
 import { v4 as uuidv4 } from 'uuid';
 import BetPool from "./BetPool";
