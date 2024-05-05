@@ -12,7 +12,7 @@ export default class AppManager {
     private static validatorManager: ValidatorManager;
 
     activeGames: Map<string, Game>;
-    
+
     private constructor() {
         this.activeGames = new Map<string, Game>();
         AppManager.wallet = createWallet();
@@ -38,9 +38,9 @@ export default class AppManager {
         return game;
     }
 
-    async closeGame(gameId: string, data: string, signature:Hex) {
+    async closeGame(gameId: string, data: string, signature: Hex) {
         const game = this.activeGames.get(gameId);
-        if (game === undefined ) {
+        if (!game) {
             throw new Error("No Game found");
         }
         await game.settle(data, signature);
@@ -54,7 +54,7 @@ export default class AppManager {
     listActiveGames() {
         //@TODO might be interesting adding extra info such as bets per game
         const games = [];
-        for (const game of this.activeGames) {
+        for (const game of this.activeGames.values()) {
             games.push(game);
         }
         return games;
