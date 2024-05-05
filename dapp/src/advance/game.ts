@@ -3,8 +3,6 @@ import { BasicArgs, HandlerFunction } from ".";
 
 const createGame: HandlerFunction = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, appManager, governance } = args;
-
-  // only members can create games
   if (!governance.isMember(metadata.msg_sender)) {
     app.createReport({
       payload: toHex("Sender is not member of the DAO"),
