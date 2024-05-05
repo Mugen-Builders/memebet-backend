@@ -9,9 +9,10 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
     app.createReport({
       payload: toHex("Sender is not member of the DAO"),
     });
+    return "reject";
   }
   //@TODO fix inputArgs; type and args don't match
-  const [id, home, away, token, start, validatorFunctionRunner, end] = inputArgs;
+  const [id, home, away, token, start, end] = inputArgs;
 
   //Just Testing
   let pickHome = fromHex(home, 'string').replace(/ +/g, '');
