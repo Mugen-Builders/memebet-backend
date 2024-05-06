@@ -57,7 +57,7 @@ describe('Governance Routes', () => {
             governance
         });
 
-        expect(governance.addMember).toHaveBeenCalledWith("0x12345", "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266");
+        expect(governance.addMember).toHaveBeenCalledWith("0x999888777", "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266");
         expect(app.createNotice).toHaveBeenCalledWith({ payload: toHex("Member added sucessfully!") });
         expect(res).toBe("accept");
     });
