@@ -64,7 +64,7 @@ export const handlers = {
 
 
 export const abi = [
-  "function createGame(bytes32, bytes32, bytes32, bytes32, uint256, uint256)",
+  "function createGame(bytes32 gameid, bytes32 home, bytes32 away, address token , uint256 start, uint256 end)",
   "function closeGame(@TODO PARAMS)",
   "function placeBet(bytes32 gameid, address player, bytes32 pick, uint256 amount)",
 ];
