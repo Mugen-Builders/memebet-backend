@@ -20,7 +20,6 @@ const addMember: HandlerFunction = async (args: BasicArgs) => {
 }
 
 const removeMember: HandlerFunction = async (args: BasicArgs) => {
-    // @todo remove member logic
     const { inputArgs, metadata, governance, app } = args;
     const address = inputArgs;
     try {
