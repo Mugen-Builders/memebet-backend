@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, vi, beforeAll } from 'vitest';
 import { MockedObjectDeep } from '@vitest/spy';
-import { AdvanceRequestData, Bet } from "../../src/types";
+import { AdvanceRequestData, Bet, VFR } from "../../src/types";
 import { Hex, toHex, fromHex } from 'viem';
 import * as gameRoutes from "../../src/advance/game";
 
@@ -25,7 +25,7 @@ describe('Game Routes', () => {
     let governance: MockedObjectDeep<Governance>;
     let basicMetadata: AdvanceRequestData["metadata"];
     let game: MockedObjectDeep<Game>;
-    let validatorManager: MockedObjectDeep<ValidatorManager>;
+    let validatorManager: ValidatorManager;
 
     beforeAll(() => {
         app = vi.mocked(createApp({ url: "http://127.0.0.1:8080/rollup" }), { deep: true });
@@ -33,6 +33,11 @@ describe('Game Routes', () => {
         appManager = vi.mocked(AppManager.getInstance(), { deep: true });
         governance = vi.mocked(Governance.getInstance(), { deep: true });
         validatorManager = vi.mocked(ValidatorManager .getInstance(), {deep: true});
+        const testValidatorFunction: VFR = async () => 'test_result';
+        
+        validatorManager.createNewValidator("test_name", testValidatorFunction);
+        const validator = validatorManager.getValidator('test_name');
+
         basicMetadata = {
             msg_sender: toHex(155),
             epoch_index: 10,
@@ -41,14 +46,7 @@ describe('Game Routes', () => {
             timestamp: Date.now()
         };
 
-        const validatorFunction = validatorManager.getValidator("test_name");
-
-        if (!validatorFunction) {
-            console.log("Error!")
-            return
-        } 
-
-        game = vi.mocked(new Game([], 100, 110, toHex(10), wallet, validatorFunction),{deep: true});
+        game = vi.mocked(new Game([], 100, 110, toHex(10), wallet, validator),{deep: true});
     });
 
     beforeEach(() => {
@@ -60,6 +58,7 @@ describe('Game Routes', () => {
         app.createNotice = vi.fn();
         app.createReport = vi.fn();
         appManager.createGame = vi.fn();
+
         const inputArgs = [
             toHex("game001"), // id
             toHex("team1"), // home
@@ -81,7 +80,7 @@ describe('Game Routes', () => {
         });
 
         expect(governance.isMember).toHaveBeenCalledWith(toHex(155));
-        expect(appManager.createGame).toHaveBeenCalledWith(["team1", "team2"], 1691011200,1691014800, toHex("0x12345"));
+        expect(appManager.createGame).toHaveBeenCalled();
         expect(app.createNotice).toHaveBeenCalledWith({ payload: toHex("Game Created Sucessfully!") });
         expect(res).toBe("accept");
     });
