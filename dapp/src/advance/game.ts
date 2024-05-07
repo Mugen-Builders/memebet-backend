@@ -2,23 +2,31 @@ import { fromHex, toHex } from "viem";
 import { BasicArgs, HandlerFunction } from ".";
 
 const createGame: HandlerFunction = async (args: BasicArgs) => {
-  const { inputArgs, app, wallet, metadata, appManager, governance } = args;
+  const { inputArgs, app, wallet, metadata, appManager, governance, validatorManager } = args;
   if (!governance.isMember(metadata.msg_sender)) {
     app.createReport({
       payload: toHex("Sender is not member of the DAO"),
     });
     return "reject";
   }
-  //@TODO fix inputArgs; type and args don't match
-  const [id, home, away, token, start, end] = inputArgs;
+
+  const [id, home, away, token, start, end, validatorFunctionName] = inputArgs;
 
   //Just Testing
   let pickHome = fromHex(home, 'string').replace(/ +/g, '');
   let pickAway = fromHex(away, 'string').replace(/ +/g, '');
 
+  const validatorFunctionRunner = validatorManager.getValidator(validatorFunctionName);
+  if (!validatorFunctionRunner) {
+    app.createReport({
+      payload: toHex("Invalid validator function name"),
+    });
+    return "reject";
+  }
+
   let picks: string[] = [pickHome, pickAway];
   if (!appManager.activeGames.has(id)) {
-    appManager.createGame(picks, start, end, token);
+    appManager.createGame(picks, start, end, token, validatorFunctionRunner);
     app.createNotice({
       payload: toHex("Game Created Sucessfully!"),
     });
@@ -40,7 +48,7 @@ const closeGame: HandlerFunction = async (args: BasicArgs) => {
 
 const placeBet: HandlerFunction = async (args: BasicArgs) => {
   const { inputArgs, appManager } = args;
-  const [ gameid, player, pick, amount ] = inputArgs;
+  const [gameid, player, pick, amount] = inputArgs;
   const game = appManager.getGameById(gameid);
   if (game) {
     game.makeBet({
