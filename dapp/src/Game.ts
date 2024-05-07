@@ -1,4 +1,4 @@
-import { Hex, getAddress } from "viem";
+import { Hex, getAddress, toHex } from "viem";
 import { Bet, VFR, PlayerBet } from "./types";
 import { ValidatorFunctionRunner } from "./validator";
 import { DAOSignatureBlobChecker } from "./DAOSignatureBlobChecker";
@@ -7,8 +7,17 @@ import { v4 as uuidv4 } from 'uuid';
 import BetPool from "./BetPool";
 import Governance from "./Governance";
 
+
+let GAME_ID = 0;
+
+const getGameId = (): Hex => {
+    GAME_ID++;
+    return toHex(GAME_ID);
+}
+
 export default class Game {
     id: string
+    
     picks: Array<string>;
     currentOdds: Map<string, bigint>
     playerIds: Array<string>;
@@ -22,7 +31,7 @@ export default class Game {
     betPool: BetPool
     wallet: WalletApp
     constructor(_picks: Array<string>, start: number, end: number, tokenAddress: Hex, _wallet: WalletApp, validatorFunction: ValidatorFunctionRunner) {
-        this.id = uuidv4();
+        this.id = getGameId();
         this.playersBets = new Map();
         this.picks = _picks;
         this.currentOdds = new Map();
@@ -40,6 +49,8 @@ export default class Game {
     getPlayer = (player: string) => {
         return { player: player, Bet: this.playersBets.get(player) }
     }
+    
+    
     makeBet = (_bet: Bet) => {
         let playerBets = this.playersBets.get(_bet.player);
         if (!playerBets) {
@@ -58,6 +69,7 @@ export default class Game {
         bets.push(_bet); // Add the bet to the array
 
         this.betPool.addBet(_bet); // Add bet to the pool
+        return true;
     };
 
     getInfo = () => {
@@ -92,3 +104,5 @@ export default class Game {
 
 
 }
+
+
