@@ -8,13 +8,16 @@
     "@deroll/wallet": "^0.6.0",
     "@types/express": "^4.17.21",
     "@types/uuid": "^9.0.8",
+    "axios": "^1.6.8",
     "express": "^4.19.2",
     "openapi-fetch": "^0.7",
     "uuid": "^9.0.1",
-    "viem": "^2.9.25"
+    "viem": "^2.9.25",
+    "wait-on": "^7.2.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/wait-on": "^5.3.4",
     "esbuild": "^0.19",
     "npm-run-all": "^4",
     "openapi-typescript": "^6",
