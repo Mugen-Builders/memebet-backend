@@ -1,7 +1,7 @@
 import Game from './Game';
 import { WalletApp, createWallet } from '@deroll/wallet';
 import { Hex } from 'viem';
-import { ValidatorManager } from './validator';
+import { ValidatorFunctionRunner, ValidatorManager } from './validator';
 
 // Higher level manager for all things bet
 // Handles the creation and listing of new models
@@ -32,8 +32,8 @@ export default class AppManager {
 
     //@todo createGame needs to get a "verify function" name string here
     //use Validator Manager to resolve the name into actual ValidatorFunctionRunner
-    createGame(picks: Array<string>, start: number, end: number, tokenAddress: Hex /**VFun here */) {
-        const game = new Game(picks, start, end, tokenAddress, AppManager.wallet);
+    createGame(picks: Array<string>, start: number, end: number, tokenAddress: Hex, validatorFunction: ValidatorFunctionRunner) {
+        const game = new Game(picks, start, end, tokenAddress, AppManager.wallet, validatorFunction);
         this.activeGames.set(game.id, game);
         return game;
     }

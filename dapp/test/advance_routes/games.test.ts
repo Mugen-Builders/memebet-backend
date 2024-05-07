@@ -10,6 +10,7 @@ import { WalletApp, createWallet } from '@deroll/wallet';
 import AppManager from '../../src/AppManager';
 import Governance from '../../src/Governance';
 import Game from '../../src/Game';
+import { ValidatorFunctionRunner, ValidatorManager } from '../../src/validator';
 
 const {
     createGame,
@@ -24,12 +25,14 @@ describe('Game Routes', () => {
     let governance: MockedObjectDeep<Governance>;
     let basicMetadata: AdvanceRequestData["metadata"];
     let game: MockedObjectDeep<Game>;
+    let validatorManager: MockedObjectDeep<ValidatorManager>;
 
     beforeAll(() => {
         app = vi.mocked(createApp({ url: "http://127.0.0.1:8080/rollup" }), { deep: true });
         wallet = vi.mocked(createWallet(), { deep: true });
         appManager = vi.mocked(AppManager.getInstance(), { deep: true });
         governance = vi.mocked(Governance.getInstance(), { deep: true });
+        validatorManager = vi.mocked(ValidatorManager .getInstance(), {deep: true});
         basicMetadata = {
             msg_sender: toHex(155),
             epoch_index: 10,
@@ -37,7 +40,15 @@ describe('Game Routes', () => {
             block_number: 100,
             timestamp: Date.now()
         };
-        game = vi.mocked(new Game([], 100, 110, toHex(10), wallet), { deep: true });
+
+        const validatorFunction = validatorManager.getValidator("test_name");
+
+        if (!validatorFunction) {
+            console.log("Error!")
+            return
+        } 
+
+        game = vi.mocked(new Game([], 100, 110, toHex(10), wallet, validatorFunction),{deep: true});
     });
 
     beforeEach(() => {
@@ -56,6 +67,7 @@ describe('Game Routes', () => {
             toHex("0x12345"), // token
             1691011200, // start
             1691014800, // end
+            "test_name"
         ];
 
         const res = await createGame({
@@ -64,7 +76,8 @@ describe('Game Routes', () => {
             wallet,
             metadata: basicMetadata,
             appManager,
-            governance
+            governance,
+            validatorManager
         });
 
         expect(governance.isMember).toHaveBeenCalledWith(toHex(155));
@@ -83,6 +96,7 @@ describe('Game Routes', () => {
             toHex("0x12345"), // token
             1691011200, // start
             1691014800, // end
+            "test_name"
         ];
 
         const res = await createGame({
@@ -91,7 +105,8 @@ describe('Game Routes', () => {
             wallet,
             metadata: basicMetadata,
             appManager,
-            governance
+            governance,
+            validatorManager
         });
 
         expect(governance.isMember).toHaveBeenCalledWith(toHex(155));
@@ -110,7 +125,8 @@ describe('Game Routes', () => {
             wallet,
             metadata: basicMetadata,
             appManager,
-            governance
+            governance,
+            validatorManager
         });
 
         expect(res).toBe("reject");
@@ -132,7 +148,8 @@ describe('Game Routes', () => {
             wallet,
             metadata: basicMetadata,
             appManager,
-            governance
+            governance,
+            validatorManager
         });
 
         expect(appManager.getGameById).toHaveBeenCalledTimes(1);
@@ -156,7 +173,8 @@ describe('Game Routes', () => {
             wallet,
             metadata: basicMetadata,
             appManager,
-            governance
+            governance,
+            validatorManager
         });
 
         expect(appManager.getGameById).toHaveBeenCalledTimes(1);

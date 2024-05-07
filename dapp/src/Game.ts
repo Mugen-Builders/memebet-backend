@@ -21,7 +21,7 @@ export default class Game {
 
     betPool: BetPool
     wallet: WalletApp
-    constructor(_picks: Array<string>, start: number, end: number, tokenAddress: Hex, _wallet: WalletApp) {
+    constructor(_picks: Array<string>, start: number, end: number, tokenAddress: Hex, _wallet: WalletApp, validatorFunction: ValidatorFunctionRunner) {
         this.id = uuidv4();
         this.playersBets = new Map();
         this.picks = _picks;
@@ -33,8 +33,7 @@ export default class Game {
         this.startTime = start;
         this.endTime = end;
         this.playerIds = [];
-        // @TODO correct this, should get a true function here
-        this.verifyFun = new ValidatorFunctionRunner("", new DAOSignatureBlobChecker(Governance.getInstance()))
+        this.verifyFun = validatorFunction;
         this.wallet = _wallet
         this.betPool = new BetPool(_picks, tokenAddress, _wallet);
     }
