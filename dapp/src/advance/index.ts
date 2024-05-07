@@ -1,7 +1,7 @@
 
 import { App } from "@deroll/core";
 import { WalletApp } from "@deroll/wallet";
-import  AppManager from "../AppManager";
+import AppManager from "../AppManager";
 import Game from '../Game';
 import { decodeFunctionData, parseAbi } from "viem";
 
@@ -10,7 +10,9 @@ import { AdvanceRequestData, RequestHandlerResult } from "../types";
 import * as walletHandlers from "./wallet";
 import * as betHandlers from "./game";
 import * as governanceHandlers from "./governance";
+import * as validatorHandlers from "./validator";
 import Governance from "../Governance";
+import { ValidatorManager } from "../validator";
 
 const games = new Map<string, Game>();
 
@@ -20,7 +22,8 @@ export type BasicArgs = {
     wallet: WalletApp;
     metadata: AdvanceRequestData["metadata"];
     appManager: AppManager;
-    governance: Governance
+    governance: Governance;
+    validatorManager: ValidatorManager;
 };
 
 
@@ -31,10 +34,11 @@ const handlers: Handlers = {
     ...betHandlers.handlers,
     ...walletHandlers.handlers,
     ...governanceHandlers.handlers,
+    ...validatorHandlers.handlers,
 };
-const abi = parseAbi([...betHandlers.abi, ...walletHandlers.abi, ...governanceHandlers.abi]);
+const abi = parseAbi([...betHandlers.abi, ...walletHandlers.abi, ...governanceHandlers.abi, ...validatorHandlers.abi]);
 
-export default async (app: App, wallet: WalletApp, appManager: AppManager, governance: Governance) => {
+export default async (app: App, wallet: WalletApp, appManager: AppManager, governance: Governance, validatorManager: ValidatorManager) => {
     walletHandlers.addTokensDepositHandler(app, wallet);
     app.addAdvanceHandler(async ({ payload, metadata }: AdvanceRequestData) => {
         try {
@@ -44,7 +48,7 @@ export default async (app: App, wallet: WalletApp, appManager: AppManager, gover
                 console.warn(`No handler found for function: ${functionName}`);
                 return "reject";
             }
-            return handler({ inputArgs: args, app, wallet, metadata, appManager, governance });
+            return handler({ inputArgs: args, app, wallet, metadata, appManager, governance, validatorManager });
         } catch (error) {
             console.error("Error processing command:", error);
             return "reject";

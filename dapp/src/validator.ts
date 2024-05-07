@@ -2,15 +2,18 @@ import { recoverAddress, Hex } from "viem";
 
 import { VFR } from "./types";
 import { DAOSignatureBlobChecker } from "./DAOSignatureBlobChecker";
+import Governance from "./Governance";
 
 // Hanldes the creation and listing of new validator functions
 // Creation should be done by DAO only
 export class ValidatorManager {
 
-    functions: Map<string, VFR>;
+    functions: Map<string, ValidatorFunctionRunner>;
+    daoSigChecker: DAOSignatureBlobChecker;
 
     private constructor() {
         this.functions = new Map();
+        this.daoSigChecker = new DAOSignatureBlobChecker(Governance.getInstance());
     }
     private static instance: ValidatorManager;
     public static getInstance(): ValidatorManager {
@@ -19,7 +22,8 @@ export class ValidatorManager {
         }
         return ValidatorManager.instance;
     }
-    createNewValidator(name: string, fn: VFR) {
+    createNewValidator(name: string, functionString: string) {
+        const fn = new ValidatorFunctionRunner(functionString, this.daoSigChecker);
         this.functions.set(name, fn);
     }
 
