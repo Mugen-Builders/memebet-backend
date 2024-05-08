@@ -6,15 +6,14 @@ import { Hex } from "viem";
 export default class Governance {
     members: Array<string>
 
-    private constructor(members: Array<string>) {
+    constructor(members: Array<string>) {
+        if (Governance.instance) throw new Error("There is already an active Governance instance");
         this.members = members;
+        Governance.instance = this;
     }
-    private static instance:Governance;
+    private static instance: Governance;
 
     public static getInstance(): Governance {
-        if (!Governance.instance) {
-            Governance.instance = new Governance(["0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"]);
-        }
         return Governance.instance;
     }
 
@@ -25,11 +24,11 @@ export default class Governance {
     addMember(address: string, msgSender: string) {
         address.toLowerCase()
         if (this.isMember(msgSender.toLowerCase())) {
-            if (!this.isMember(address)){
-            this.members.push(address);
+            if (!this.isMember(address)) {
+                this.members.push(address);
             }
-            else{
-            throw new Error("This address is already a member");
+            else {
+                throw new Error("This address is already a member");
             }
         } else {
             throw new Error("Only members can add new members");
@@ -50,5 +49,14 @@ export default class Governance {
         } else {
             throw new Error("Only members can remove members");
         }
+    }
+
+    // @DEV this is a test helper
+    public static _resetInstance():void {
+        if(process.env.GOVERNANCE_TEST === 'true') {
+            Governance.instance = undefined as unknown as Governance;
+            return;
+        }
+        throw new Error("Method not allowed");
     }
 }

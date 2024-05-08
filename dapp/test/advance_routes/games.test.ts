@@ -31,12 +31,11 @@ describe('Game Routes', () => {
         app = vi.mocked(createApp({ url: "http://127.0.0.1:8080/rollup" }), { deep: true });
         wallet = vi.mocked(createWallet(), { deep: true });
         appManager = vi.mocked(AppManager.getInstance(), { deep: true });
-        governance = vi.mocked(Governance.getInstance(), { deep: true });
+        governance = vi.mocked(new Governance(["0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"]), { deep: true });
         validatorManager = vi.mocked(ValidatorManager .getInstance(), {deep: true});
-        const testValidatorFunction: VFR = async () => 'test_result';
-        
+        const testValidatorFunction =  "async () => 'test_result'";
         validatorManager.createNewValidator("test_name", testValidatorFunction);
-        const validator = validatorManager.getValidator('test_name');
+        const validator = validatorManager.getValidator('test_name')!;
 
         basicMetadata = {
             msg_sender: toHex(155),

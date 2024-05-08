@@ -10,6 +10,7 @@ import { WalletApp, createWallet } from '@deroll/wallet';
 import AppManager from '../src/AppManager';
 import Governance from '../src/Governance';
 import Game from '../src/Game';
+import { ValidatorManager } from '../src/validator';
 
 
 const {
@@ -53,14 +54,19 @@ describe('Game', () => {
             const player = toHex(12345);
             const pick = "team1";
             const amount = BigInt(500);
+            
+            const validatorManager = ValidatorManager.getInstance();
+            const testValidatorFunction =  "async () => 'test_result'";
+            validatorManager.createNewValidator("test_name", testValidatorFunction);
+            const validator = validatorManager.getValidator('test_name')!;
 
-            const bet = {
-                gameid: gameId,
-                player: player,
-                pick: pick,
-                amount: amount,
-                effectiveAmount: BigInt(0)
-            };
+            // const bet = { @TODO: we possibly need to remove this if not using the makeBet method
+            //     gameid: gameId,
+            //     player: player,
+            //     pick: pick,
+            //     amount: amount,
+            //     effectiveAmount: BigInt(0)
+            // };
 
             appManager.getGameById = vi.fn().mockReturnValue(game);
 
@@ -72,7 +78,8 @@ describe('Game', () => {
                 wallet,
                 metadata: basicMetadata,
                 appManager,
-                governance
+                governance,
+                validatorManager
             });
 
             expect(appManager.getGameById).toHaveBeenCalledWith(gameId);
@@ -100,7 +107,7 @@ describe('Game', () => {
                     ["team2", BigInt(0)]
                 ]
             };
-
+            //@TODO you shouldn't test directly a mocked object
             expect(game.getInfo()).toEqual(expectedInfo);
         });
 

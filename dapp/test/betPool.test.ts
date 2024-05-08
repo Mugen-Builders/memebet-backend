@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import BetPool, { resetPoolAddress } from '../src/BetPool';
 import { WalletApp } from "@deroll/wallet";
-import { Bet, PlayerBet } from "../src/types";
+import { Bet } from "../src/types";
 import { Hex, toHex } from 'viem';
 
 describe('BetPool', () => {

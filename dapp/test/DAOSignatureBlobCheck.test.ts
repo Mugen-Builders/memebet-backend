@@ -1,11 +1,10 @@
 
-import { describe, expect, test, beforeAll } from "vitest";
+import { describe, expect, test, beforeAll, beforeEach } from "vitest";
 import { hashMessage, createWalletClient, http, WalletClient, PrivateKeyAccount } from "viem";
 import { privateKeyToAccount } from "viem/accounts"
 import { mainnet } from "viem/chains";
 import { DAOSignatureBlobChecker } from "../src/DAOSignatureBlobChecker";
 import Governance from "../src/Governance";
-
 
 
 describe("DAOSignatureBlobChecker", () => {
@@ -16,15 +15,21 @@ describe("DAOSignatureBlobChecker", () => {
     beforeAll(() => {
         account = privateKeyToAccount(privateTestKey);
         wallet = createWalletClient({ account, chain: mainnet, transport: http() });
+        process.env.GOVERNANCE_TEST = 'true';
     });
 
+    beforeEach(()=>{
+        Governance._resetInstance();
+    })
+
     test("should verify a signature", async () => {
-        const governance = new Governance([publicTestKey]);
+        const governance = new Governance([publicTestKey]); 
         const checker = new DAOSignatureBlobChecker(governance);
         const data = "test data";
         const hash = hashMessage(data);
         const signature = await wallet.signMessage({ account, message: data });
         expect(checker.verify(hash, signature)).resolves.toBe(true);
+        Governance._resetInstance();
     });
 
     test("should not verify a signature", async () => {
@@ -38,6 +43,7 @@ describe("DAOSignatureBlobChecker", () => {
     })
 
     test("should handle null or undefined hash and signature", async () => {
+        //@DEV this test makes little sense in the TS context
         const governance = new Governance([publicTestKey]);
         const checker = new DAOSignatureBlobChecker(governance);
         await expect(checker.verify(null, "alice_signature_123")).rejects.toThrow();

@@ -2,11 +2,10 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 import Governance from "../src/Governance";
 
 describe('Governance', () => {
-    let governance: Governance;
+    let governance = new Governance(["0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"]);
 
     beforeEach(() => {
         vi.resetModules();
-        governance = Governance.getInstance();
     });
 
     test('should initialize with the correct default members', () => {

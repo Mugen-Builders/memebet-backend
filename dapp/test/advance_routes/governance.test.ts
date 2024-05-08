@@ -9,6 +9,7 @@ import { App } from "@deroll/core";
 import { WalletApp, createWallet } from '@deroll/wallet';
 import AppManager from '../../src/AppManager';
 import Governance from '../../src/Governance';
+import { ValidatorManager } from '../../src/validator';
 
 const {
     addMember,
@@ -21,12 +22,13 @@ describe('Governance Routes', () => {
     let appManager: MockedObjectDeep<AppManager>;
     let governance: MockedObjectDeep<Governance>;
     let basicMetadata: AdvanceRequestData["metadata"];
+    let validatorManager: MockedObjectDeep<ValidatorManager>;
 
     beforeAll(() => {
         app = vi.mocked(createApp({ url: "http://127.0.0.1:8080/rollup" }), { deep: true });
         wallet = vi.mocked(createWallet(), { deep: true });
         appManager = vi.mocked(AppManager.getInstance(), { deep: true });
-        governance = vi.mocked(Governance.getInstance(), { deep: true });
+        governance = vi.mocked(new Governance(["0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"]), { deep: true });
         basicMetadata = {
             msg_sender: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
             epoch_index: 10,
@@ -35,6 +37,11 @@ describe('Governance Routes', () => {
             timestamp: Date.now()
         };
         vi.mocked(governance.addMember("0x1234",basicMetadata.msg_sender), { deep: true });
+
+        validatorManager = vi.mocked(ValidatorManager .getInstance(), {deep: true});
+        const testValidatorFunction =  "async () => 'test_result'";
+        validatorManager.createNewValidator("test_name", testValidatorFunction);
+        const validator = validatorManager.getValidator('test_name')!;
     });
 
     beforeEach(() => {
@@ -54,7 +61,8 @@ describe('Governance Routes', () => {
             wallet,
             metadata: basicMetadata,
             appManager,
-            governance
+            governance,
+            validatorManager
         });
 
         expect(governance.addMember).toHaveBeenCalledWith("0x999888777", "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266");
@@ -74,7 +82,8 @@ describe('Governance Routes', () => {
             wallet,
             metadata: basicMetadata,
             appManager,
-            governance
+            governance,
+            validatorManager
         });
 
         expect(governance.removeMember).toHaveBeenCalledWith("0x1234", "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266");

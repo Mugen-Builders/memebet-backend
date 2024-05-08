@@ -1,19 +1,27 @@
-import { describe, test, expect, beforeEach, vi, MockedObject } from 'vitest';
+import { describe, test, expect, beforeEach, vi, MockedObject, beforeAll } from 'vitest';
 import Game from '../src/Game';
 import AppManager from '../src/AppManager';
 import { WalletApp, createWallet } from '@deroll/wallet';
 import { Hex, toHex } from 'viem';
+import { ValidatorFunctionRunner } from '../src/validator';
+import { DAOSignatureBlobChecker } from '../src/DAOSignatureBlobChecker';
+import Governance from '../src/Governance';
 
 describe('AppManager', () => {
     let appManager: MockedObject<AppManager>;
     let mockWallet: MockedObject<WalletApp>;
     const mockTokenAddress: Hex = '0xf795b3D15D47ac1c61BEf4Cc6469EBb2454C6a9b';
+    let validator: MockedObject<ValidatorFunctionRunner>;
 
-    beforeEach(() => {
+    beforeAll(() => {
         appManager = vi.mocked(AppManager.getInstance(), { deep: true });
         mockWallet = vi.mocked(createWallet(), { deep: true });
         AppManager['wallet'] = mockWallet;
+        let checker = new DAOSignatureBlobChecker(Governance.getInstance());
+        validator = vi.mocked(new ValidatorFunctionRunner("", checker), { deep: true });
+    });
 
+    beforeEach(() => {
         vi.clearAllMocks();
     });
 
@@ -27,7 +35,7 @@ describe('AppManager', () => {
         const start = 1691011200; 
         const end = 1691014800; 
 
-        const newGame = appManager.createGame(picks, start, end, mockTokenAddress);
+        const newGame = appManager.createGame(picks, start, end, mockTokenAddress, validator);
 
         expect(newGame).toBeInstanceOf(Game);
         expect(newGame.picks).toEqual(picks);
@@ -43,7 +51,7 @@ describe('AppManager', () => {
         };
 
         // Create a new game and add it to active games
-        const newGame = appManager.createGame(gameData.picks, gameData.start, gameData.end, gameData.tokenAddress);
+        const newGame = appManager.createGame(gameData.picks, gameData.start, gameData.end, gameData.tokenAddress, validator);
 
         // Mock settle method of Game
         vi.spyOn(newGame, 'settle').mockResolvedValue();
@@ -64,14 +72,14 @@ describe('AppManager', () => {
         const start = 1691011200;
         const end = 1691014800;
 
-        const game = appManager.createGame(picks, start, end, mockTokenAddress);
+        const game = appManager.createGame(picks, start, end, mockTokenAddress, validator);
 
         expect(appManager.getGameById(game.id)).toBe(game);
     });
 
     test('should list all active games', () => {
-        const game1 = appManager.createGame(['team1', 'team2'], 1691011200, 1691014800, mockTokenAddress);
-        const game2 = appManager.createGame(['team3', 'team4'], 1691014900, 1691018500, mockTokenAddress);
+        const game1 = appManager.createGame(['team1', 'team2'], 1691011200, 1691014800, mockTokenAddress, validator);
+        const game2 = appManager.createGame(['team3', 'team4'], 1691014900, 1691018500, mockTokenAddress, validator);
 
         const activeGames = appManager.listActiveGames();
 

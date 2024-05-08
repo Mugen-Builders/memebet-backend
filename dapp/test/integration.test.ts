@@ -10,7 +10,7 @@ describe("ValidatorFunctionRunner", () => {
     let serverProcess: ReturnType<typeof spawn>;
 
     beforeAll(async () => {
-        serverProcess = spawn('/home/teste/go/bin/nonodo', [], {
+        serverProcess = spawn('nonodo', [], {
             env: {
                 ...process.env, // copy the parent process's environment variables
             },

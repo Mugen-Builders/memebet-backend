@@ -21,7 +21,6 @@ export type Bet = {
     effectiveAmount?: bigint
     odds?: number
 }
-export type PlayerBet = Map<string, Array<Bet>>;
 
 export type VFR = (picksBets: Map<string, Bet[]>, data: string, signature: Hex) => Promise<string>;
 

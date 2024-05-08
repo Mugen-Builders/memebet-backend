@@ -9,14 +9,13 @@ import { ValidatorFunctionRunner, ValidatorManager } from './validator';
 export default class AppManager {
     private static instance: AppManager;
     private static wallet: WalletApp;
-    private static validatorManager: ValidatorManager;
+
 
     activeGames: Map<string, Game>;
 
     private constructor() {
         this.activeGames = new Map<string, Game>();
         AppManager.wallet = createWallet();
-        AppManager.validatorManager = ValidatorManager.getInstance();
     }
 
     public static getInstance(): AppManager {
@@ -30,8 +29,6 @@ export default class AppManager {
         return AppManager.wallet;
     }
 
-    //@todo createGame needs to get a "verify function" name string here
-    //use Validator Manager to resolve the name into actual ValidatorFunctionRunner
     createGame(picks: Array<string>, start: number, end: number, tokenAddress: Hex, validatorFunction: ValidatorFunctionRunner) {
         const game = new Game(picks, start, end, tokenAddress, AppManager.wallet, validatorFunction);
         this.activeGames.set(game.id, game);
