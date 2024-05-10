@@ -49,7 +49,6 @@ export default class AppManager {
     }
 
     listActiveGames() {
-        //@TODO might be interesting adding extra info such as bets per game
         const games = [];
         for (const game of this.activeGames.values()) {
             games.push(game);

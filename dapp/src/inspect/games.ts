@@ -17,7 +17,7 @@ export const register: InspectHandlers = ({ app, wallet, router, appManager }) =
                 return JSON.stringify("There are no current games ongoing!");
             }
 
-            return JSON.stringify(allGames);
+            return JSON.stringify(allGames, jsonReplacer, 2);
         } catch (error: unknown) {
             if (error instanceof Error) {
                 console.error("Error retrieving current games:", error);
@@ -28,4 +28,8 @@ export const register: InspectHandlers = ({ app, wallet, router, appManager }) =
             }
         }
     });
+
+    function jsonReplacer(key: string, value: any): any {
+        return typeof value === 'bigint' ? value.toString() : value;
+    }
 }

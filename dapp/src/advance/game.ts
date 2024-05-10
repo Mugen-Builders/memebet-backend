@@ -1,4 +1,4 @@
-import { fromHex, toHex } from "viem";
+import { fromBytes, fromHex, toHex } from "viem";
 import { BasicArgs, HandlerFunction } from ".";
 
 const createGame: HandlerFunction = async (args: BasicArgs) => {
@@ -10,11 +10,11 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
     return "reject";
   }
 
-  const [id, home, away, token, start, end, validatorFunctionName] = inputArgs;
+  const [id, home, away, token, start, end, validatorFunctionNameHx] = inputArgs;
 
-  //Just Testing
-  let pickHome = fromHex(home, 'string').replace(/ +/g, '');
-  let pickAway = fromHex(away, 'string').replace(/ +/g, '');
+  let pickHome = fromHex(home, 'string').replace(/\0/g, '');
+  let pickAway = fromHex(away, 'string').replace(/\0/g, '');
+  let validatorFunctionName = fromHex(validatorFunctionNameHx, 'string').replace(/\0/g, '');
 
   const validatorFunctionRunner = validatorManager.getValidator(validatorFunctionName);
   if (!validatorFunctionRunner) {
@@ -72,7 +72,7 @@ export const handlers = {
 
 
 export const abi = [
-  "function createGame(bytes32 gameid, bytes32 home, bytes32 away, address token , uint256 start, uint256 end)",
-  "function closeGame(@TODO PARAMS)",
+  "function createGame(bytes32 gameid, bytes32 home, bytes32 away, address token , uint256 start, uint256 end, bytes32 validatorFunctionName)",
+  "function closeGame(bytes32 gameid)",
   "function placeBet(bytes32 gameid, address player, bytes32 pick, uint256 amount)",
 ];
