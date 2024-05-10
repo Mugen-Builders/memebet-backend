@@ -17,18 +17,29 @@ export type InspectHandlers = (args:InspectHandlerInput) => void;
 
 import * as gamesRoutes from "./games";
 import * as governanceRoutes from "./governance";
+import { Hex } from "viem";
 
 export default (app: App, wallet: WalletApp , appManager: AppManager, governance:Governance) => {
   const router = createRouter({ app });
 
-  router.add<{ address: string }>(
-    "wallet/:address",
-    ({ params: { address } }) => {
+  router.add<{ sender: string }>(
+    "wallet/ether/:sender",
+    ({ params: { sender } }) => {
       return JSON.stringify({
-        etherBalance: wallet.etherBalanceOf(address),
+        balance: `${wallet.etherBalanceOf(sender).toString()} wei`,
       });
     }
   );
+
+  router.add<{ token: Hex; sender: string }>(
+    "wallet/erc20/:token/:sender",
+    ({ params: { token, sender } }) => {
+      return JSON.stringify({
+        balance: `${wallet.erc20BalanceOf(token, sender).toString()}`,
+      });
+    }
+  );
+
   gamesRoutes.register({app, wallet, router, appManager, governance});
   governanceRoutes.register({app, wallet, router, appManager, governance});
 
