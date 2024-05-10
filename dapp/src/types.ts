@@ -24,4 +24,5 @@ export type Bet = {
 
 export type VFR = (picksBets: Map<string, Bet[]>, data: string, signature: Hex) => Promise<string>;
 
+export type PlayerBet = Map<string, Array<Bet>>;
 
