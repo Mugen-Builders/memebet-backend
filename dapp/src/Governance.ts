@@ -58,4 +58,10 @@ export default class Governance {
         }
         throw new Error("Method not allowed");
     }
+
+    listAllMembers(): string[] {
+        return [...this.members];
+    }
+
+
 }
