@@ -65,7 +65,7 @@ describe('Game Routes', () => {
             toHex("0x12345"), // token
             1691011200, // start
             1691014800, // end
-            "test_name"
+            toHex('test_name')
         ];
 
         const res = await createGame({
