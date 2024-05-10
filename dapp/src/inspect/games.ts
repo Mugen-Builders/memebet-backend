@@ -1,12 +1,14 @@
+import { toHex } from "viem";
 import { InspectHandlers } from ".";
+import { jsonReplacer } from "./utils";
 
 export const register: InspectHandlers = ({ app, wallet, router, appManager }) => {
     router.add<{ gameId: string }>(
         "games/getGame/:gameId",
         ({ params: { gameId } }) => {
-            const game = appManager.getGameById(gameId);
+            const game = appManager.getGameById(toHex(Number(gameId)));
             if (!game) return "Game not found";
-            return JSON.stringify(game.getInfo());
+            return JSON.stringify(game.getInfo(), jsonReplacer, 2);
         }
     );
 
@@ -28,8 +30,4 @@ export const register: InspectHandlers = ({ app, wallet, router, appManager }) =
             }
         }
     });
-
-    function jsonReplacer(key: string, value: any): any {
-        return typeof value === 'bigint' ? value.toString() : value;
-    }
 }
