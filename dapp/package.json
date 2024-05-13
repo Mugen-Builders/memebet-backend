@@ -10,6 +10,7 @@
     "@types/uuid": "^9.0.8",
     "axios": "^1.6.8",
     "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
     "openapi-fetch": "^0.7",
     "uuid": "^9.0.1",
     "viem": "^2.9.25",
@@ -18,20 +19,22 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/wait-on": "^5.3.4",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
     "esbuild": "^0.19",
     "npm-run-all": "^4",
     "openapi-typescript": "^6",
     "ts-node": "^10.9.2",
     "typescript": "^5",
-    "vitest": "^1.5.2"
+    "vitest": "^1.6.0"
   },
   "scripts": {
     "build": "run-s codegen compile",
     "codegen": "ts-node schema.ts",
-    "compile": "tsc && esbuild ./src/main.ts --bundle --outfile=dist/main.js --platform=node --target=node20",
-    "start": "ROLLUP_HTTP_SERVER_URL=\"http://127.0.0.1:5004\" ts-node src/main.ts",
-    "dev": "nonodo -- yarn ts-node src/main.ts",
-    "test": "vitest"
+    "compile": "tsc && esbuild ./src/index.ts --bundle --outfile=dist/index.js --platform=node --target=node20",
+    "start": "ROLLUP_HTTP_SERVER_URL=\"http://127.0.0.1:5004\" ts-node src/index.ts",
+    "dev": "nonodo -- yarn ts-node src/index.ts",
+    "test": "vitest --coverage"
   },
   "keywords": [
     "cartesi"
