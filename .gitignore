@@ -128,3 +128,11 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+dapp/.idea/dapp.iml
+dapp/.idea/misc.xml
+dapp/.idea/modules.xml
+dapp/.idea/vcs.xml
+dapp/.idea/workspace.xml
+dapp/.vscode/extensions.json
+dapp/.vscode/launch.json
+dapp/package-lock.json
