@@ -35,7 +35,7 @@ describe('AppManager', () => {
         const start = 1691011200; 
         const end = 1691014800; 
 
-        const newGame = appManager.createGame(picks, start, end, mockTokenAddress, validator);
+        const newGame = appManager.createGame(picks, start, end, mockTokenAddress, validator, appManager);
 
         expect(newGame).toBeInstanceOf(Game);
         expect(newGame.picks).toEqual(picks);
@@ -51,7 +51,7 @@ describe('AppManager', () => {
         };
 
         // Create a new game and add it to active games
-        const newGame = appManager.createGame(gameData.picks, gameData.start, gameData.end, gameData.tokenAddress, validator);
+        const newGame = appManager.createGame(gameData.picks, gameData.start, gameData.end, gameData.tokenAddress, validator, appManager);
 
         // Mock settle method of Game
         vi.spyOn(newGame, 'settle').mockResolvedValue();

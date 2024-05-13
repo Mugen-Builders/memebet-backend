@@ -11,10 +11,10 @@ export default class AppManager {
     private static wallet: WalletApp;
 
 
-    activeGames: Map<string, Game>;
+    activeGames: Map<number, Game>;
 
     private constructor() {
-        this.activeGames = new Map<string, Game>();
+        this.activeGames = new Map<number, Game>();
         AppManager.wallet = createWallet();
     }
 
@@ -35,7 +35,7 @@ export default class AppManager {
         return game;
     }
 
-    async closeGame(gameId: string, data: string, signature: Hex) {
+    async closeGame(gameId: number, data: string, signature: Hex) {
         const game = this.activeGames.get(gameId);
         if (!game) {
             throw new Error("No Game found");
@@ -44,7 +44,7 @@ export default class AppManager {
         this.activeGames.delete(gameId);
     }
 
-    getGameById(gameId: string): Game | undefined {
+    getGameById(gameId: number): Game | undefined {
         return this.activeGames.get(gameId);
     }
 

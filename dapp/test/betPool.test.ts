@@ -15,6 +15,7 @@ describe('BetPool', () => {
         resetPoolAddress();
         mockWallet = {
             transferERC20: vi.fn(),
+            transferEther: vi.fn(),
         } as unknown as WalletApp;
 
         betPool = new BetPool(["football", "basketball"], mockToken, mockWallet);

@@ -3,10 +3,10 @@ import { InspectHandlers } from ".";
 import { jsonReplacer } from "./utils";
 
 export const register: InspectHandlers = ({ app, wallet, router, appManager }) => {
-    router.add<{ gameId: string }>(
+    router.add<{ gameId: number }>(
         "games/getGame/:gameId",
         ({ params: { gameId } }) => {
-            const game = appManager.getGameById(toHex(Number(gameId)));
+            const game = appManager.getGameById(Number(gameId));
             if (!game) return "Game not found";
             return JSON.stringify(game.getInfo(), jsonReplacer, 2);
         }

@@ -7,16 +7,16 @@ import { v4 as uuidv4 } from 'uuid';
 import BetPool from "./BetPool";
 import Governance from "./Governance";
 
-
 let GAME_ID = 0;
 
-const getGameId = (): Hex => {
+const getGameId = () => {
     GAME_ID++;
-    return toHex(GAME_ID);
+    return GAME_ID;
 }
 
+
 export default class Game {
-    id: string
+    id: number
     
     picks: Array<string>;
     currentOdds: Map<string, bigint>
@@ -104,5 +104,4 @@ export default class Game {
 
 
 }
-
 

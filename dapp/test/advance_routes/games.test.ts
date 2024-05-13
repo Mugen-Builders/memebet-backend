@@ -59,7 +59,6 @@ describe('Game Routes', () => {
         appManager.createGame = vi.fn();
 
         const inputArgs = [
-            toHex("game001"), // id
             toHex("team1"), // home
             toHex("team2"), // away
             toHex("0x12345"), // token
@@ -134,9 +133,10 @@ describe('Game Routes', () => {
         appManager.getGameById = vi.fn().mockReturnValue(game);
         game.makeBet = vi.fn();
         const inputArgs = [
-            "football-2024-10-11", // gameId
+            toHex("football-2024-10-11"), // gameId
             toHex(12345), // player
             "pick",
+            "0x0000000000000000000000000000000000000000",
             100, // amount
         ];
 
@@ -159,7 +159,7 @@ describe('Game Routes', () => {
         appManager.getGameById = vi.fn().mockReturnValue(undefined);
         game.makeBet = vi.fn();
         const inputArgs = [
-            "football-2024-10-11", // gameId
+            toHex("football-2024-10-11"), // gameId
             toHex(12345), // player
             "pick",
             100, // amount

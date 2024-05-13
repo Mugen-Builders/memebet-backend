@@ -2,7 +2,7 @@ import { fromBytes, fromHex, toHex } from "viem";
 import { BasicArgs, HandlerFunction } from ".";
 
 const createGame: HandlerFunction = async (args: BasicArgs) => {
-  const { inputArgs, app, wallet, metadata, appManager, governance, validatorManager } = args;
+  const { inputArgs, app, metadata, appManager, governance, validatorManager } = args;
   if (!governance.isMember(metadata.msg_sender)) {
     app.createReport({
       payload: toHex("Sender is not member of the DAO"),
@@ -10,7 +10,7 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
     return "reject";
   }
 
-  const [id, home, away, token, start, end, validatorFunctionNameHx] = inputArgs;
+  const [/*id,*/ home, away, token, start, end, validatorFunctionNameHx] = inputArgs;
 
   let pickHome = fromHex(home, 'string').replace(/\0/g, '');
   let pickAway = fromHex(away, 'string').replace(/\0/g, '');
@@ -25,14 +25,14 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
   }
 
   let picks: string[] = [pickHome, pickAway];
-  if (!appManager.activeGames.has(id)) {
+  try {
     appManager.createGame(picks, start, end, token, validatorFunctionRunner);
     app.createNotice({
       payload: toHex("Game Created Sucessfully!"),
     });
-  } else {
+  } catch (error) {
     app.createReport({
-      payload: toHex("Game already exists!"),
+      payload: toHex("Error Creating Game: " + error),
     });
     return "reject";
   }
@@ -47,19 +47,27 @@ const closeGame: HandlerFunction = async (args: BasicArgs) => {
 };
 
 const placeBet: HandlerFunction = async (args: BasicArgs) => {
-  const { inputArgs, appManager } = args;
-  const [gameid, player, pick, amount] = inputArgs;
-  const game = appManager.getGameById(gameid);
+  const { inputArgs, app, wallet, appManager, metadata} = args;
+  const [hexGameid, pick, token, amount] = inputArgs;
+  let player = metadata.msg_sender;
+  let gameid = fromHex(hexGameid, 'string').replace(/\0/g, '');
+  const game = appManager.getGameById(Number(gameid));
   if (game) {
     game.makeBet({
       pick,
       player,
       amount: BigInt(amount),
       effectiveAmount: BigInt(0),
-      tokenAddress: "",
+      tokenAddress: token,
+    });
+    app.createNotice({
+      payload: toHex("Bet Placed Sucessfully!"),
     });
     return "accept";
   }
+  app.createReport({
+    payload: toHex("PlaceBet Failed!"),
+  });
   return "reject";
 };
 
@@ -72,7 +80,7 @@ export const handlers = {
 
 
 export const abi = [
-  "function createGame(bytes32 gameid, bytes32 home, bytes32 away, address token , uint256 start, uint256 end, bytes32 validatorFunctionName)",
+  "function createGame(bytes32 home, bytes32 away, address token , uint256 start, uint256 end, bytes32 validatorFunctionName)",
   "function closeGame(bytes32 gameid)",
-  "function placeBet(bytes32 gameid, address player, bytes32 pick, uint256 amount)",
+  "function placeBet(bytes32 gameid, bytes32 pick, address token, uint256 amount)",
 ];

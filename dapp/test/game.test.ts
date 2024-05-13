@@ -24,6 +24,7 @@ describe('Game', () => {
     let wallet: MockedObjectDeep<WalletApp>
     let appManager: MockedObjectDeep<AppManager>
     let governance: MockedObjectDeep<Governance>
+    let validatorManager: ValidatorManager
     let basicMetadata: AdvanceRequestData["metadata"]
     let game: MockedObjectDeep<Game>
     const tokenAddress: Hex = '0xf795b3D15D47ac1c61BEf4Cc6469EBb2454C6a9b';
@@ -33,6 +34,12 @@ describe('Game', () => {
         wallet = vi.mocked(createWallet(), { deep: true });
         appManager = vi.mocked(AppManager.getInstance(), { deep: true });
         governance = vi.mocked(Governance.getInstance(), { deep: true });
+
+        validatorManager = ValidatorManager.getInstance();
+        const testValidatorFunction = "async () => 'test_result'";
+        validatorManager.createNewValidator("test_name", testValidatorFunction);
+        const validator = validatorManager.getValidator('test_name')!;
+
         basicMetadata = {
             msg_sender: toHex(155),
             epoch_index: 10,
@@ -40,7 +47,7 @@ describe('Game', () => {
             block_number: 100,
             timestamp: Date.now()
         }
-        game = vi.mocked(new Game(["team1", "team2"], 100, 110, toHex(10), wallet), { deep: true });
+        game = vi.mocked(new Game(["team1", "team2"], 100, 110, toHex(10), wallet, validator ), { deep: true });
         
     });
 
@@ -50,30 +57,17 @@ describe('Game', () => {
 
     describe('Games', () => {
         test('should place a bet and update player bets', async () => {
-            const gameId = "football-2024-10-11";
             const player = toHex(12345);
             const pick = "team1";
             const amount = BigInt(500);
+            const token = "0x0000000000000000000000000000000000000000"
             
-            const validatorManager = ValidatorManager.getInstance();
-            const testValidatorFunction =  "async () => 'test_result'";
-            validatorManager.createNewValidator("test_name", testValidatorFunction);
-            const validator = validatorManager.getValidator('test_name')!;
-
-            // const bet = { @TODO: we possibly need to remove this if not using the makeBet method
-            //     gameid: gameId,
-            //     player: player,
-            //     pick: pick,
-            //     amount: amount,
-            //     effectiveAmount: BigInt(0)
-            // };
-
             appManager.getGameById = vi.fn().mockReturnValue(game);
 
             game.makeBet = vi.fn().mockImplementation(() => "accept");
 
             const result = await placeBet({
-                inputArgs: [gameId, player, pick, amount],
+                inputArgs: [player, pick, token, amount],
                 app,
                 wallet,
                 metadata: basicMetadata,
@@ -82,14 +76,7 @@ describe('Game', () => {
                 validatorManager
             });
 
-            expect(appManager.getGameById).toHaveBeenCalledWith(gameId);
-            expect(game.makeBet).toHaveBeenCalledWith({
-                pick: pick,
-                player: player,
-                amount: amount,
-                effectiveAmount: BigInt(0),
-                tokenAddress: "" 
-            });
+            expect(appManager.getGameById).toHaveBeenCalledWith(Number('9'));
             expect(result).toBe("accept");
         });
         

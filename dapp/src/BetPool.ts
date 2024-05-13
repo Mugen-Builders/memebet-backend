@@ -44,9 +44,13 @@ export default class BetPool {
     }
 
     addBet(bet: Bet) {
-        // transfer the funds to the pool
+        // transfer the funds to the pool.
         this.fundsLocked += bet.amount;
-        this.wallet.transferERC20(getAddress(bet.tokenAddress), bet.player, this.poolAddress, bet.amount);
+        if (bet.tokenAddress !== "0x0000000000000000000000000000000000000000") {
+            this.wallet.transferERC20(getAddress(bet.tokenAddress), bet.player, this.poolAddress, bet.amount);
+        }else{
+            this.wallet.transferEther(bet.player, this.poolAddress, bet.amount);
+        }    
         const [newBet, _effectiveBet] = this.calculateEffectiveAmount(bet);
         this.picksBets.get(bet.pick)?.push(newBet);
         this.effectiveBets.set(bet.pick, _effectiveBet);
@@ -85,7 +89,11 @@ export default class BetPool {
         bets.forEach((b) => {
             const amount = b[key] ?? BigInt(0);
             total += amount;
-            this.wallet.transferERC20(getAddress(b.tokenAddress), this.poolAddress, b.player, amount);
+            if(b.tokenAddress === "0x0000000000000000000000000000000000000000") {
+                this.wallet.transferERC20(getAddress(b.tokenAddress), this.poolAddress, b.player, amount);
+            }else{
+                this.wallet.transferEther(b.player, this.poolAddress, amount);
+            }
 
         })
         this.fundsLocked -= total;
@@ -93,8 +101,12 @@ export default class BetPool {
 
     async transferFunds(token: string, from: string, to: string, amount: bigint) {
         try {
-            await this.wallet.transferERC20(getAddress(token), from, to, amount);
-        } catch (error) {
+            if(token === "0x0000000000000000000000000000000000000000") {
+                await this.wallet.transferEther(from, to, amount);
+            }else{
+                await this.wallet.transferERC20(getAddress(token), from, to, amount);
+        } 
+        }catch (error) {
             console.error(`Error transferring funds: ${error}`);
             throw new Error('Fund transfer failed');
         }
