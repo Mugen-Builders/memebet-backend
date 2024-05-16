@@ -3,27 +3,57 @@
   "version": "0.1.0",
   "description": "TypeScript DApp",
   "dependencies": {
-    "@calindra/cartesify-backend": "^0.1.2",
+    "@deroll/app": "^0.6.0",
+    "@deroll/router": "^0.4.0",
+    "@deroll/wallet": "^0.6.0",
     "@types/express": "^4.17.21",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@types/uuid": "^9.0.8",
+    "axios": "^1.6.8",
     "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
     "openapi-fetch": "^0.7",
-    "viem": "^1"
+    "uuid": "^9.0.1",
+    "viem": "^2.9.25",
+    "wait-on": "^7.2.0"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^0.15.0",
+    "@nomicfoundation/hardhat-ignition-viem": "^0.15.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@nomicfoundation/hardhat-viem": "^2.0.0",
+    "@types/chai": "^4.2.0",
+    "@types/chai-as-promised": "^7.1.6",
     "@types/node": "^20",
+    "@types/wait-on": "^5.3.4",
+    "@types/mocha": ">=9.1.0",
+    "solidity-coverage": "^0.8.0",
+    "chai": "^4.2.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
     "esbuild": "^0.19",
     "npm-run-all": "^4",
     "openapi-typescript": "^6",
     "ts-node": "^10.9.2",
+    "hardhat": "^2.14.0",
+    "hardhat-gas-reporter": "^1.0.8",
     "typescript": "^5",
-    "vitest": "^0.34"
+    "vitest": "^1.6.0"
   },
   "scripts": {
     "build": "run-s codegen compile",
     "codegen": "ts-node schema.ts",
-    "compile": "tsc && esbuild ./src/main.ts --bundle --outfile=dist/main.js --platform=node --target=node20",
-    "start": "ROLLUP_HTTP_SERVER_URL=\"http://127.0.0.1:5004\" ts-node src/main.ts",
-    "dev": "nonodo -- yarn ts-node src/main.ts"
+    "compile": "tsc && esbuild ./src/index.ts --bundle --outfile=dist/index.js --platform=node --target=node20",
+    "start": "ROLLUP_HTTP_SERVER_URL=\"http://127.0.0.1:5004\" ts-node src/index.ts",
+    "dev": "nonodo -- yarn ts-node src/index.ts",
+    "test": "vitest --coverage",
+    "build:hardhat": "hardhat compile",
+    "test:integration": "vitest test/integration",
+    "clean:ignored": "rimraf artifacts cache coverage deployments/localhost dist generated-src src/types/*",
+    "clean:hardhat": "hardhat clean",
+    "clean": "run-s clean:hardhat clean:ignored"
   },
   "keywords": [
     "cartesi"
