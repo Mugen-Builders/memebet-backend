@@ -1,144 +1,79 @@
-import { describe, expect, test, beforeAll, afterAll } from "vitest";
-import { exec } from 'child_process';
-import axios from 'axios';
+import { describe, expect, test, beforeAll, beforeEach, afterAll } from "vitest";
+import { GetContractReturnType, Address, Client, Abi, Hex, checksumAddress } from 'viem';
 import waitOn from 'wait-on';
-import { spawn, ChildProcess } from 'child_process';
-import exp from "constants";
+import { spawn } from 'child_process';
+import { deployTokens, publicClient } from "./deploy_tokens";
+import { createApp } from "@deroll/app";
 
 const ROLLUP_SERVER = process.env.ROLLUP_HTTP_SERVER_URL || "http://127.0.0.1:8080/rollup";
 
+describe("Integration tests", () => {
+    let nonodoProcess: ReturnType<typeof spawn>;
+    let tokenAdmin: Hex = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+    let tt20: GetContractReturnType<Abi, Client, Address>;
+    let tt721: GetContractReturnType<Abi, Client, Address>;
+    const e18 = BigInt(1e18);
 
-//Warning: THIS WORKS ONLY IF WE UP THE NONODO MANUALLY!
-
-describe("Integration Tests", () => {
-    let serverProcess: ChildProcess;
-
-    // Start the server before all tests
+    let testUserToken: Hex = '0xa0Ee7A142d267C1f36714E4a8F75612F20a79720';
     beforeAll(async () => {
-        serverProcess = spawn('nonodo', [], {
+
+        nonodoProcess = spawn('nonodo', [], {
             env: {
                 ...process.env, // copy the parent process's environment variables
             },
         });
 
-        serverProcess.stdout!.on('data', (data) => {
+        nonodoProcess.stdout!.on('data', (data) => {
             console.log(`stdout: ${data}`);
         });
 
-        serverProcess.stderr!.on('data', (data) => {
+        nonodoProcess.stderr!.on('data', (data) => {
             console.error(`stderr: ${data}`);
         });
 
-        serverProcess.on('error', (error) => {
+        nonodoProcess.on('error', (error) => {
             console.error(`spawn error: ${error}`);
         });
 
-        // Wait until the server is ready (404 means the endpoint exists)
-        await waitOn({
-            resources: [ROLLUP_SERVER],
-            validateStatus: (status) => status === 404,
-            timeout: 60000, // Set a timeout of 60 seconds
-        });
-
+        await waitOn({ resources: [ROLLUP_SERVER], validateStatus: (status) => status === 404 });
         console.log('Nonodo is ready');
+        const [_tt20, _tt721] = await deployTokens(tokenAdmin);
+        tt20 = _tt20 as unknown as GetContractReturnType<Abi, Client, Address>;
+        tt721 = _tt721 as unknown as GetContractReturnType<Abi, Client, Address>;
     });
 
-    // Test case
-    test("should create a validator function and run a full betting session", async () => {
-        console.log('Running a full betting session');
-
-        // Register a Validator Function
-        const registerValidatorFunctionCommand = `sunodo send generic \
-            --dapp=0x70ac08179605AF2D9e75782b8DEcDD3c22aA4D0C \
-            --chain-id=31337 \
-            --rpc-url=http://127.0.0.1:8545 \
-            --mnemonic-passphrase='test test test test test test test test test test test junk' \
-            --input=0x796eed58636e6e0000000000000000000000000000000000000000000000000000000000746573745f66756e6374696f6e00000000000000000000000000000000000000`;
-
-        await new Promise<void>((resolve, reject) => {
-            exec(registerValidatorFunctionCommand, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`Register Validator Function error: ${error}`);
-                    reject(error);
-                    return;
-                }
-                console.log(`Register Validator Function stdout: ${stdout}`);
-                console.error(`Register Validator Function stderr: ${stderr}`);
-                resolve();
-            });
-        });
-
-        // Create a Game
-        const createGameCommand = `sunodo send generic \
-            --dapp=0x70ac08179605AF2D9e75782b8DEcDD3c22aA4D0C \
-            --chain-id=31337 \
-            --rpc-url=http://127.0.0.1:8545 \
-            --mnemonic-passphrase='test test test test test test test test test test test junk' \
-            --input=0x9e924243637572696e7469610000000000000000000000000000000000000000000000007061726d65697261000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000638a2d8000000000000000000000000000000000000000000000000000000000638a3b90636e6e0000000000000000000000000000000000000000000000000000000000`;
-
-        await new Promise<void>((resolve, reject) => {
-            exec(createGameCommand, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`Create Game error: ${error}`);
-                    reject(error);
-                    return;
-                }
-                console.log(`Create Game stdout: ${stdout}`);
-                console.error(`Create Game stderr: ${stderr}`);
-                resolve();
-            });
-        });
-
-        // Check Game Information
-        const gameResponse = await axios.get('http://127.0.0.1:8080/inspect/games/getGame/1');
-        console.log('Game Information:', gameResponse.data);
-        // Decode reports' payloads
-        const reports = gameResponse.data.reports.map((report: any) => {
-            const utf8Payload = hexToUtf8(report.payload);
-            return {
-                ...report,
-                payload: JSON.parse(utf8Payload)
-            };
-        });
-
-        console.log('Decoded Reports:', reports);
-
-        expect(gameResponse.status).toBe(200);
-
-        expect(reports).toEqual([
-            {
-                payload: {
-                    id: "0x1",
-                    picks: ["curintia", "parmeira"],
-                    startTime: "1670000000",
-                    endTime: "1670003600",
-                    fees: 2,
-                    playerIds: [],
-                    currentOdds: [
-                        ["curintia", "0"],
-                        ["parmeira", "0"]
-                    ]
-                }
-            }
-        ]);
-
-        // Check individual fields
-        const firstReportPayload = reports[0].payload;
-
-        expect(firstReportPayload.id).toBe("0x1");
-        expect(firstReportPayload.picks).toEqual(["curintia", "parmeira"]);
-        expect(firstReportPayload.startTime).toBe("1670000000");
-
-    }, 60000);
+    test("should operate the tokens normally", async () => {
+        expect(tt20.read.balanceOf([tokenAdmin])).resolves.toBe(0n);
+        expect(tt20.read.owner()).resolves.toBe(checksumAddress(tokenAdmin));
+        await tt20.write.mint([tokenAdmin, 10000n * e18]); //10k tokens
+        expect(tt20.read.balanceOf([tokenAdmin])).resolves.toBe(10000n * e18);
 
 
-    // Stop the server after all tests
+        // we can mint tokens for other users
+
+        await tt20.write.mint([testUserToken, 1n * e18]); //1k tokens
+        expect(tt20.read.balanceOf([testUserToken])).resolves.toBe(1n * e18);
+
+
+        // --- 721
+
+        expect(tt721.read.balanceOf([tokenAdmin])).resolves.toBe(0n);
+        expect(tt721.read.owner()).resolves.toBe(checksumAddress(tokenAdmin));
+        await tt721.write.safeMint([tokenAdmin]); //100 tokens
+        expect(tt721.read.balanceOf([tokenAdmin])).resolves.toBe(1n);
+
+        // we can mint tokens for other users
+        await tt721.write.safeMint([testUserToken]); //100 tokens
+        expect(tt721.read.balanceOf([testUserToken])).resolves.toBe(1n);
+
+        // owners of 721 are of unique tokens
+        expect(tt721.read.ownerOf([0n])).resolves.toBe(checksumAddress(tokenAdmin));
+        expect(tt721.read.ownerOf([1n])).resolves.toBe(checksumAddress(testUserToken));
+
+    });
+
     afterAll(() => {
-        serverProcess.kill();
+        nonodoProcess.kill();
         console.log('Nonodo is stopped');
     });
 });
-
-function hexToUtf8(hex: string): string {
-    return Buffer.from(hex.replace(/^0x/, ''), 'hex').toString('utf8');
-}

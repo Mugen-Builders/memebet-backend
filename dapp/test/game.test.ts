@@ -140,6 +140,9 @@ describe('Game', () => {
 
             game.makeBet(bet1);
             game.makeBet(bet2);
+            if(game){{
+                
+            }}
 
             expect(game.playersBets.get(player1).get("team1")[0].amount).toEqual(BigInt(500));
             expect(game.playersBets.get(player2).get("team2")[0].amount).toEqual(BigInt(300));
