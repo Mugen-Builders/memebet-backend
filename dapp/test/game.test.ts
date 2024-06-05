@@ -92,7 +92,8 @@ describe('Game', () => {
                 currentOdds: [
                     ["team1", BigInt(0)],
                     ["team2", BigInt(0)]
-                ]
+                ],
+                tokenAddress: toHex(10)
             };
             //@TODO you shouldn't test directly a mocked object
             expect(game.getInfo()).toEqual(expectedInfo);
