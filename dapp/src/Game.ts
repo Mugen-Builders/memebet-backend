@@ -80,7 +80,8 @@ export default class Game {
             endTime: this.endTime,
             fees: this.fees,
             playerIds: Array.from(this.playersBets.keys()),
-            currentOdds: Array.from(this.currentOdds.entries())
+            currentOdds: Array.from(this.currentOdds.entries()),
+            tokenAddress: this.betPool.tokenAddress
         };
     };
 
