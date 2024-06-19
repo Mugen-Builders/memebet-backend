@@ -46,8 +46,8 @@ describe("DAOSignatureBlobChecker", () => {
         //@DEV this test makes little sense in the TS context
         const governance = new Governance([publicTestKey]);
         const checker = new DAOSignatureBlobChecker(governance);
-        await expect(checker.verify(null, "alice_signature_123")).rejects.toThrow();
-        await expect(checker.verify("hash_123", null)).rejects.toThrow();
+        await expect(checker.verify("0x00", "0xalice_signature_123")).rejects.toThrow();
+        await expect(checker.verify("0xhash_123", "0x0000")).rejects.toThrow();
     });
 
     test("should consistently verify the same signature", async () => {
