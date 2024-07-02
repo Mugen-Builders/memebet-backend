@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "module": "commonjs",
     "composite": false,
     "declaration": true,
     "declarationMap": true,
@@ -19,5 +20,5 @@
     "target": "ES2022"
   },
   "include": ["."],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules", "test"]
 }
