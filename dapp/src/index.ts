@@ -19,7 +19,7 @@ const governance = new Governance([INITIAL_DAO_MEMBER]);
 const validatorManager = ValidatorManager.getInstance();
 
 advanceHandlers(app, wallet , appManager, governance, validatorManager);
-const router = inspectHandlers(app, wallet, appManager, governance);
+const router = inspectHandlers(app, wallet, appManager, governance, validatorManager);
 app.addInspectHandler(router.handler);
 app.start().catch((error) => {
     console.error("Failed to start the application:", error);
