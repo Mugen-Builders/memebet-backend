@@ -63,7 +63,7 @@ describe('AppManager', () => {
     });
 
     test('should throw error when closing a non-existing game', async () => {
-        await expect(appManager.closeGame('non-existent-game-id', 'game data', '0xSignature' as Hex))
+        await expect(appManager.closeGame(123456, 'game data', '0xSignature' as Hex))
             .rejects.toThrow('No Game found');
     });
 

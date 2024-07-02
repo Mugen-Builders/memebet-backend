@@ -113,7 +113,7 @@ describe("ValidatorFunctionRunner", () => {
 
 describe('ValidatorManager', () => {
     let manager: ValidatorManager;
-    const testValidatorFunction: VFR = async () => 'test_result';
+    const testValidatorFunction = "async () => 'test_result'";
 
     beforeAll(() => {
         manager = ValidatorManager.getInstance();
@@ -137,8 +137,8 @@ describe('ValidatorManager', () => {
 
     test('should list all validators', () => {
         const validators = new Map([
-            ['validator1', `async (...args) => 'validator1_result'`],
-            ['validator2', `async (...args) => 'validator2_result'`],
+            ['validator1', testValidatorFunction],
+            ['validator2', "async () => 'validator2_result'"],
         ]);
 
         // Adding multiple validators

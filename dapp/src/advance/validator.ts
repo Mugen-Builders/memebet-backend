@@ -11,9 +11,10 @@ const addValidationFunction: HandlerFunction = async (args: BasicArgs) => {
         return "reject";
     }
     const [functionName, functionCode] = inputArgs; //@TODO: check if we need to unhex functionCode
-    const name = fromHex(functionName, 'string').replace(/\0/g, '');;
+    const name = fromHex(functionName, 'string').replace(/\0/g, '');
+    const code = fromHex(functionCode, 'string').replace(/\0/g, '');
 
-    validatorManager.createNewValidator(name,functionCode);
+    validatorManager.createNewValidator(name, code);
     app.createNotice({ payload: toHex(`Validator ${name} added sucessfully!`) });
     return "accept";
 };
@@ -23,5 +24,5 @@ export const handlers = {
 };
 
 export const abi = [
-    "function addValidationFunction(bytes32 name, bytes32 functionString)"
+    "function addValidationFunction(bytes32 name, bytes functionString)"
 ]
