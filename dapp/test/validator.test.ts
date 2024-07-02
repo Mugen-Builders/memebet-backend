@@ -11,10 +11,10 @@ import { Bet, VFR } from "../src/types";
 describe("ValidatorFunctionRunner", () => {
     const privateTestKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
     const publicTestKey = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
-    let wallet: WalletClient
-    let account: PrivateKeyAccount
-    let governance: Governance
-    let checker: DAOSignatureBlobChecker
+    let wallet: WalletClient;
+    let account: PrivateKeyAccount;
+    let governance: Governance;
+    let checker: DAOSignatureBlobChecker;
 
     beforeAll(() => {
         account = privateKeyToAccount(privateTestKey);
@@ -125,29 +125,42 @@ describe('ValidatorManager', () => {
     });
 
     test('should create a new validator', () => {
-        manager.createNewValidator('test_validator', testValidatorFunction);
-        expect(manager.functions).length(1);
+        manager.createNewValidator('test_validator', `async (...args) => 'test_result'`);
+        expect(manager.functions.size).toBe(1);
     });
 
     test('should get an existing validator', () => {
-        manager.createNewValidator('existing_validator', testValidatorFunction);
+        manager.createNewValidator('existing_validator', `async (...args) => 'test_result'`);
         const validator = manager.getValidator('existing_validator');
         expect(validator).not.toBeNull();
     });
 
     test('should list all validators', () => {
         const validators = new Map([
-            ['validator1', testValidatorFunction],
-            ['validator2', async () => 'validator2_result'],
+            ['validator1', `async (...args) => 'validator1_result'`],
+            ['validator2', `async (...args) => 'validator2_result'`],
         ]);
 
         // Adding multiple validators
         validators.forEach((fn, name) => {
-            manager.createNewValidator(name, testValidatorFunction);
+            manager.createNewValidator(name, fn);
         });
 
         const listedValidators = Array.from(manager.getValidators());
 
-        expect(listedValidators).length(validators.size);
+        expect(listedValidators.length).toBe(validators.size);
+    });
+
+    test('should get all function names', () => {
+        const validators = ['validator1', 'validator2'];
+
+        // Adding multiple validators
+        validators.forEach(name => {
+            manager.createNewValidator(name, `async (...args) => '${name}_result'`);
+        });
+
+        const functionNames = manager.getAllFunctionNames();
+
+        expect(functionNames).toEqual(validators);
     });
 });

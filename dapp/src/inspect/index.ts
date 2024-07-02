@@ -11,15 +11,19 @@ export type InspectHandlerInput = {
   router: Router;
   appManager: AppManager;
   governance: Governance;
+  validatorManager?: ValidatorManager;
 };
 
 export type InspectHandlers = (args:InspectHandlerInput) => void;
 
 import * as gamesRoutes from "./games";
 import * as governanceRoutes from "./governance";
-import { Hex } from "viem";
+import * as functions from "./functions";
 
-export default (app: App, wallet: WalletApp , appManager: AppManager, governance:Governance) => {
+import { Hex } from "viem";
+import { ValidatorManager } from "../validator";
+
+export default (app: App, wallet: WalletApp , appManager: AppManager, governance:Governance, validatorManager: ValidatorManager) => {
   const router = createRouter({ app });
 
   router.add<{ sender: string }>(
@@ -42,6 +46,7 @@ export default (app: App, wallet: WalletApp , appManager: AppManager, governance
 
   gamesRoutes.register({app, wallet, router, appManager, governance});
   governanceRoutes.register({app, wallet, router, appManager, governance});
+  functions.register({ app, wallet, router, appManager, governance, validatorManager });
 
   return router;
 };
