@@ -2,7 +2,6 @@
   "name": "my-dapp",
   "version": "0.1.0",
   "description": "TypeScript DApp",
-  "type": "module",
   "dependencies": {
     "@deroll/app": "^0.6.0",
     "@deroll/router": "^0.4.0",
