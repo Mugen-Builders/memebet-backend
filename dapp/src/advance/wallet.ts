@@ -22,7 +22,7 @@ import {
 const depositNoticePayload = (functionName:any, idOrAmount: Readonly<bigint|bigint[]>, address?:Hex) => {
   const abi = parseAbi([
     "function depositEther(uint256 amount)",
-    "function depositERC20(uint256 amount)",
+    "function depositERC20(uint256 amount, address tokenAddress)",
     "function depositERC721(uint256 id, address tokenAddress)",
     "function depositERC1155Single(uint256 id, address tokenAddress)",
     "function depositERC1155Batch(uint256[] ids, address tokenAddress)",
@@ -97,7 +97,7 @@ export const addTokensDepositHandler = (app: App, wallet: WalletApp) => {
 const withdrawTokens = async (args: BasicArgs): Promise<"accept" | "reject"> => {
   const { inputArgs, app, wallet, metadata } = args;
   try {
-    const { tokenAddress, withdrawAmount } = inputArgs;
+    const [tokenAddress, withdrawAmount ] = inputArgs;
     app.createVoucher(
       wallet.withdrawERC20(tokenAddress, metadata.msg_sender, withdrawAmount)
     );
