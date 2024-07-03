@@ -21,11 +21,13 @@ const validatorManager = ValidatorManager.getInstance();
 advanceHandlers(app, wallet , appManager, governance, validatorManager);
 const router = inspectHandlers(app, wallet, appManager, governance, validatorManager);
 app.addInspectHandler(router.handler);
+start();
 
 
 export function start() {
     app.start().catch((error) => {
         console.error("Failed to start the application:", error);
-        // process.exit(1);
+        process.exit(1);
     });    
 }
+
