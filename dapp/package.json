@@ -18,7 +18,7 @@
     "wait-on": "^7.2.0"
   },
   "devDependencies": {
-    "@gbarros/noextra": "^0.1.3-beta",
+    "@gbarros/noextra": "^0.1.4-beta",
     "@nomicfoundation/hardhat-ignition": "^0.15.0",
     "@nomicfoundation/hardhat-ignition-viem": "^0.15.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
