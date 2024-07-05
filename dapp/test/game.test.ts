@@ -1,5 +1,8 @@
 import { describe, test, expect, beforeEach, vi, beforeAll } from 'vitest';
 import { MockedObjectDeep } from '@vitest/spy';
+import { hashMessage, createWalletClient, http, WalletClient, PrivateKeyAccount } from "viem";
+import { privateKeyToAccount } from "viem/accounts"
+import { mainnet } from "viem/chains";
 import { AdvanceRequestData, Bet, PlayerBet } from "../src/types";
 import { Hex, toHex } from 'viem';
 import * as gameRoutes from "../src/advance/game"
@@ -20,6 +23,8 @@ const {
 } = gameRoutes.handlers;
 
 describe('Game', () => {
+    const privateTestKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    const publicTestKey = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
     let app: MockedObjectDeep<App>
     let wallet: MockedObjectDeep<WalletApp>
     let appManager: MockedObjectDeep<AppManager>
@@ -40,7 +45,7 @@ describe('Game', () => {
         });
         wallet = vi.mocked(createWallet(), { deep: true });
         appManager = vi.mocked(AppManager.getInstance(), { deep: true });
-        governance = vi.mocked(Governance.getInstance(), { deep: true });
+        governance = vi.mocked(new Governance([publicTestKey]), { deep: true });
 
         validatorManager = ValidatorManager.getInstance();
         const testValidatorFunction = "async () => 'test_result'";
@@ -62,6 +67,22 @@ describe('Game', () => {
         vi.clearAllMocks();
     });
 
+    test('should get game info correctly', () => {
+        const expectedInfo = {
+            id: game.id,
+            picks: ["team1", "team2"],
+            startTime: 100,
+            endTime: 110,
+            fees: 2,
+            playerIds: [],
+            currentOdds: [
+                ["team1", BigInt(0)],
+                ["team2", BigInt(0)]
+            ],
+            tokenAddress: toHex(10)
+        };
+        expect(game.getInfo()).toEqual(expectedInfo);
+    });
 
     test('should place a bet and update player bets', async () => {
         const player = toHex(12345);
@@ -70,8 +91,8 @@ describe('Game', () => {
         const token = "0x0000000000000000000000000000000000000000"
 
         appManager.getGameById = vi.fn().mockReturnValue(game);
-
-        game.makeBet = vi.fn().mockImplementation(() => "accept");
+        vi.spyOn(wallet, 'transferEther').mockReturnValue();
+        vi.spyOn(game, 'makeBet');
 
         const result = await placeBet({
             inputArgs: [player, pick, token, amount],
@@ -83,38 +104,18 @@ describe('Game', () => {
             validatorManager
         });
 
+        expect(game.makeBet).toHaveBeenCalled();
+        expect(wallet.transferEther).toHaveBeenCalled();
         expect(appManager.getGameById).toHaveBeenCalledWith(Number('9'));
         expect(result).toBe("accept");
     });
 
 
-        test('should get game info correctly', () => {
-            const expectedInfo = {
-                id: game.id,
-                picks: ["team1", "team2"],
-                startTime: 100,
-                endTime: 110,
-                fees: 2,
-                playerIds: [],
-                currentOdds: [
-                    ["team1", BigInt(0)],
-                    ["team2", BigInt(0)]
-                ],
-                tokenAddress: toHex(10)
-            };
-            //@TODO you shouldn't test directly a mocked object
-            expect(game.getInfo()).toEqual(expectedInfo);
-        });
-
     test('should handle game settlement correctly', async () => {
         vi.spyOn(game.betPool, 'payout').mockImplementation(() => { });
-        game.settle = vi.fn().mockImplementation(async () => {
-            game.betPool.payout("win", ["team1"]);
-        });
-
+        vi.spyOn(game.verifyFun, 'run').mockResolvedValue("team1");
+        
         await game.settle("game data", "0xSignature");
-
-        expect(game.settle).toHaveBeenCalled();
         expect(game.betPool.payout).toHaveBeenCalledWith("win", ["team1"]);
     });
 
@@ -137,15 +138,7 @@ describe('Game', () => {
             effectiveAmount: BigInt(300),
             tokenAddress
         };
-
-        game.makeBet = vi.fn().mockImplementation(b => {
-            let playerBets = game.playersBets.get(b.player) || new Map<string, Bet[]>();
-            let betsOnPick = playerBets.get(b.pick) || [];
-            betsOnPick.push(b);
-            playerBets.set(b.pick, betsOnPick);
-            game.playersBets.set(b.player, playerBets);
-        });
-
+        vi.spyOn(wallet, 'transferERC20').mockReturnValue();
         game.makeBet(bet1);
         game.makeBet(bet2);
         expect(game.playersBets.get(player1)!.get("team1")![0]!.amount).toEqual(BigInt(500));
@@ -154,12 +147,10 @@ describe('Game', () => {
 
     test('should handle invalid winning picks correctly', async () => {
         vi.spyOn(game.betPool, 'payout').mockImplementation(() => { });
-        game.settle = vi.fn().mockImplementation(async () => {
-            game.betPool.payout("invalid");
-        });
+        vi.spyOn(game.verifyFun, 'run').mockResolvedValue("invalid");
 
         await game.settle("invalid game data", "0xSignature");
-        expect(game.settle).toHaveBeenCalled();
+
         expect(game.betPool.payout).toHaveBeenCalledWith("invalid");
     });
 
@@ -176,14 +167,6 @@ describe('Game', () => {
             tokenAddress
         };
 
-        game.makeBet = vi.fn().mockImplementation(b => {
-            let playerBets = game.playersBets.get(b.player) || new Map<string, Bet[]>();
-            let betsOnPick = playerBets.get(b.pick) || [];
-            betsOnPick.push(b);
-            playerBets.set(b.pick, betsOnPick);
-            game.playersBets.set(b.player, playerBets);
-        });
-
         game.makeBet(bet);
         const expectedPlayerBets = {
             player,
@@ -193,4 +176,46 @@ describe('Game', () => {
         };
         expect(game.getPlayer(player)).toEqual(expectedPlayerBets);
     });
+
+    test('should just close the pool if the function erroes out', async () => {
+        vi.spyOn(game.betPool, 'payout').mockImplementation(() => { });
+        vi.spyOn(game.verifyFun, 'run').mockRejectedValue("Error");
+
+        await game.settle("invalid game data", "0xSignature");
+
+        expect(game.betPool.payout).not.toHaveBeenCalled();
+    });
+
+    test('should correclty settle --no mocks', async () => {
+        const temp = `
+            async (...args) => {
+                const viem = require("viem");
+                const [picks, data, signature, checkers] = args;
+                const hash = viem.hashMessage(data);
+                const checker = checkers.get("dao_checker");
+                if(await checker.verify(hash, signature)) {
+                    if(picks.keys().next().value == data) {
+                        return data;
+                    }
+                }
+                throw new Error("Failed to verify dao signature");
+            }
+        `;
+        validatorManager = ValidatorManager.getInstance();
+        validatorManager.createNewValidator("test_name", temp);
+        const validator = validatorManager.getValidator('test_name')!;
+
+        const account = privateKeyToAccount(privateTestKey);
+        const _ethwallet = createWalletClient({ account, chain: mainnet, transport: http() });
+
+        const data = "team1";
+        const signature = await _ethwallet.signMessage({ account, message: data });
+
+        const _game = new Game(["team1", "team2"], 100, 110, toHex(10), wallet, validator);
+        // @TODO actually making a bet before settling
+
+        expect(_game.settle(data, signature)).to.not.throw;
+
+    })
+
 });
