@@ -2,6 +2,7 @@ import { describe, expect, test, beforeAll, beforeEach, afterAll } from "vitest"
 import { GetContractReturnType, Address, Client, Abi, Hex, checksumAddress } from 'viem';
 import { deployTokens } from "./deploy_tokens";
 import { nonodo, addressBook } from "@gbarros/noextra";
+import waitOn from 'wait-on';
 
 const ROLLUP_SERVER = process.env.ROLLUP_HTTP_SERVER_URL || "http://127.0.0.1:8080/rollup";
 
@@ -15,7 +16,7 @@ describe("Integration tests", () => {
     let testUserToken: Hex = '0xa0Ee7A142d267C1f36714E4a8F75612F20a79720';
     beforeAll(async () => {
         nonodo.start();
-        // await waitOn({ resources: [ROLLUP_SERVER], validateStatus: (status) => status === 404 });
+        await waitOn({ resources: [ROLLUP_SERVER], validateStatus: (status) => status === 404 });
         console.log('Nonodo is ready');
         const [_tt20, _tt721] = await deployTokens(tokenAdmin);
         tt20 = _tt20 as unknown as GetContractReturnType<Abi, Client, Address>;
@@ -56,7 +57,6 @@ describe("Integration tests", () => {
     });
 
     afterAll(() => {
-        // nonodoProcess.kill();
         nonodo.stop();
         console.log('Nonodo is stopped');
     });
