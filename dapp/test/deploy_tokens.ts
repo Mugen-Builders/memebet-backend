@@ -38,7 +38,7 @@ export async function deployTokens(ownerAddess: Hex) {
     console.log('Deploying tokens...');
     const [account] = await walletClient.getAddresses();
     console.log(account);
-    const erc20deployment = await deployContract(account, TokenERC20.abi, TokenERC20.bytecode, [ownerAddess]);
+    const erc20deployment = await deployContract(account!, TokenERC20.abi, TokenERC20.bytecode, [ownerAddess]);
     console.log(`Deployed contract with txhash: ${erc20deployment.hash} and address: ${erc20deployment.contractAddress}`);
     const tt20 = getContract({
         address: erc20deployment.contractAddress!,
@@ -49,7 +49,7 @@ export async function deployTokens(ownerAddess: Hex) {
         }
     });
 
-    const erc721deployment = await deployContract(account, TokenERC721.abi, TokenERC721.bytecode, [ownerAddess]);
+    const erc721deployment = await deployContract(account!, TokenERC721.abi, TokenERC721.bytecode, [ownerAddess]);
     console.log(`Deployed contract with txhash: ${erc721deployment.hash} and address: ${erc721deployment.contractAddress}`);
     const tt721 = getContract({
         address: erc721deployment.contractAddress!,
@@ -61,5 +61,3 @@ export async function deployTokens(ownerAddess: Hex) {
     });
     return [tt20, tt721];
 }
-
-// deployTokens('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266').then(console.log).catch(console.error);

@@ -98,7 +98,7 @@ export default class Game {
         } catch (error) {
             console.error(`Error during settlement: ${error}`);
         } finally {
-            await this.betPool.close();
+            this.betPool.close(); //@todo we are silently failing here
         }
     }
 

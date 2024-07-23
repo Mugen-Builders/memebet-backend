@@ -35,6 +35,10 @@ export class ValidatorManager {
         return this.functions.entries();
     }
 
+    getAllFunctionNames(): string[] {
+        return Array.from(this.functions.keys());
+    }
+
 }
 
 // It takes a string with a JS function and 
