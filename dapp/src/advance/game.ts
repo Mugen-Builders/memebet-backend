@@ -10,7 +10,7 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
     return "reject";
   }
 
-  const [/*id,*/ home, away, token, start, end, validatorFunctionNameHx] = inputArgs;
+  const [home, away, token, start, end, validatorFunctionNameHx] = inputArgs;
 
   let pickHome = fromHex(home, 'string').replace(/\0/g, '');
   let pickAway = fromHex(away, 'string').replace(/\0/g, '');
@@ -42,8 +42,18 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
 const closeGame: HandlerFunction = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, appManager } = args;
   const [id, data] = inputArgs;
-  appManager.closeGame(id, data, metadata.msg_sender);
-  return "reject";
+  try {
+    appManager.closeGame(id, data, metadata.msg_sender);
+    app.createNotice({
+      payload: toHex(`Game ${ id } closed sucessfully!`),
+    });
+    return "accept";
+  } catch (error) {
+    app.createReport({
+      payload: toHex("Error Closing Game: " + error), 
+    });
+    return "reject";
+  }
 };
 
 const placeBet: HandlerFunction = async (args: BasicArgs) => {
