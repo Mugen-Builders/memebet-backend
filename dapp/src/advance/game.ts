@@ -41,8 +41,8 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
 
 const closeGame: HandlerFunction = async (args: BasicArgs) => {
   const { inputArgs, app, wallet, metadata, appManager } = args;
-  //@TODO
-  //appManager.closeGame(id);
+  const [id, data] = inputArgs;
+  appManager.closeGame(id, data, metadata.msg_sender);
   return "reject";
 };
 
