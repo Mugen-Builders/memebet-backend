@@ -91,7 +91,7 @@ export const handlers = {
 
 
 export const abi = [
-  "function createGame(bytes32 title, bytes32 home, bytes32 away, address token , uint256 start, uint256 end, bytes32 validatorFunctionName)",
+  "function createGame(string title, bytes32 home, bytes32 away, address token , uint256 start, uint256 end, bytes32 validatorFunctionName)",
   "function closeGame(bytes32 gameid)",
   "function placeBet(bytes32 gameid, bytes32 pick, address token, uint256 amount)",
 ];
