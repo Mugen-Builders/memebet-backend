@@ -4,3 +4,4 @@
 src/schema.d.ts
 artifacts
 cache
+*.env

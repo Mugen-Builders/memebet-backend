@@ -8,7 +8,7 @@ import { ValidatorManager } from "./validator";
 
 const ROLLUP_SERVER = process.env.ROLLUP_HTTP_SERVER_URL || "http://127.0.0.1:5004";
 //@DEV this needs to be set before deployment to correct key
-const INITIAL_DAO_MEMBER = process.env.INITIAL_DAO_MEMBER || "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+const INITIAL_DAO_MEMBER = process.env.INITIAL_DAO_MEMBER || "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 
 const app = createApp({ url: ROLLUP_SERVER });
 
