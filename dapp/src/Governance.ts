@@ -7,7 +7,10 @@ export default class Governance {
 
     constructor(members: Array<string>) {
         if (Governance.instance) throw new Error("There is already an active Governance instance");
-        this.members = members;
+        this.members = [];
+        members.forEach((member) => {
+            this.members.push(member.toLowerCase());
+        });
         Governance.instance = this;
     }
     private static instance: Governance;
@@ -21,10 +24,9 @@ export default class Governance {
     }
 
     addMember(address: string, msgSender: string) {
-        address.toLowerCase()
         if (this.isMember(msgSender.toLowerCase())) {
             if (!this.isMember(address)) {
-                this.members.push(address);
+                this.members.push(address.toLowerCase());
             }
             else {
                 throw new Error("This address is already a member");

@@ -111,24 +111,6 @@ describe('Game Routes', () => {
         expect(res).toBe("reject");
     });
 
-    test('[closeGame] should reject because it is not implemented', async () => {
-        const inputArgs = [
-            "game001", // gameId
-        ];
-
-        const res = await closeGame({
-            inputArgs,
-            app,
-            wallet,
-            metadata: basicMetadata,
-            appManager,
-            governance,
-            validatorManager
-        });
-
-        expect(res).toBe("reject");
-    });
-
     test('[placeBet] should create a bet successfully', async () => {
         appManager.getGameById = vi.fn().mockReturnValue(game);
         game.makeBet = vi.fn();
@@ -178,5 +160,19 @@ describe('Game Routes', () => {
         expect(appManager.getGameById).toHaveBeenCalledTimes(1);
         expect(game.makeBet).toHaveBeenCalledTimes(0);
         expect(res).toBe("reject");
+    });
+
+    test('[closeGame] should reject because it is not implemented', async () => {
+        appManager.closeGame = vi.fn();
+        const res = await closeGame({
+            inputArgs: [1],
+            app,
+            wallet,
+            metadata: basicMetadata,
+            appManager,
+            governance,
+            validatorManager
+        });
+        expect(app.createNotice).toHaveBeenCalledWith({ payload: toHex(`Game ${ 1 } closed sucessfully!`) });
     });
 });
