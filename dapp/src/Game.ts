@@ -17,7 +17,7 @@ const getGameId = () => {
 
 export default class Game {
     id: number
-    
+    title: string
     picks: Array<string>;
     currentOdds: Map<string, bigint>
     playerIds: Array<string>;
@@ -30,8 +30,9 @@ export default class Game {
 
     betPool: BetPool
     wallet: WalletApp
-    constructor(_picks: Array<string>, start: number, end: number, tokenAddress: Hex, _wallet: WalletApp, validatorFunction: ValidatorFunctionRunner) {
+    constructor(title : string , _picks: Array<string>, start: number, end: number, tokenAddress: Hex, _wallet: WalletApp, validatorFunction: ValidatorFunctionRunner) {
         this.id = getGameId();
+        this.title = title;
         this.playersBets = new Map();
         this.picks = _picks;
         this.currentOdds = new Map();
@@ -75,6 +76,7 @@ export default class Game {
     getInfo = () => {
         return {
             id: this.id,
+            title: this.title,
             picks: this.picks,
             startTime: this.startTime,
             endTime: this.endTime,

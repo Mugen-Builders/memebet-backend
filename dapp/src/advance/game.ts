@@ -10,8 +10,9 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
     return "reject";
   }
 
-  const [home, away, token, start, end, validatorFunctionNameHx] = inputArgs;
+  const [title, home, away, token, start, end, validatorFunctionNameHx] = inputArgs;
 
+  let betTitle = fromHex(title, 'string').replace(/\0/g, '');
   let pickHome = fromHex(home, 'string').replace(/\0/g, '');
   let pickAway = fromHex(away, 'string').replace(/\0/g, '');
   let validatorFunctionName = fromHex(validatorFunctionNameHx, 'string').replace(/\0/g, '');
@@ -26,7 +27,7 @@ const createGame: HandlerFunction = async (args: BasicArgs) => {
 
   let picks: string[] = [pickHome, pickAway];
   try {
-    appManager.createGame(picks, start, end, token, validatorFunctionRunner);
+    appManager.createGame(betTitle, picks, start, end, token, validatorFunctionRunner);
     app.createNotice({
       payload: toHex("Game Created Sucessfully!"),
     });
@@ -90,7 +91,7 @@ export const handlers = {
 
 
 export const abi = [
-  "function createGame(bytes32 home, bytes32 away, address token , uint256 start, uint256 end, bytes32 validatorFunctionName)",
+  "function createGame(bytes32 title, bytes32 home, bytes32 away, address token , uint256 start, uint256 end, bytes32 validatorFunctionName)",
   "function closeGame(bytes32 gameid)",
   "function placeBet(bytes32 gameid, bytes32 pick, address token, uint256 amount)",
 ];

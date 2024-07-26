@@ -29,8 +29,8 @@ export default class AppManager {
         return AppManager.wallet;
     }
 
-    createGame(picks: Array<string>, start: number, end: number, tokenAddress: Hex, validatorFunction: ValidatorFunctionRunner) {
-        const game = new Game(picks, start, end, tokenAddress, AppManager.wallet, validatorFunction);
+    createGame(title: string, picks: Array<string>, start: number, end: number, tokenAddress: Hex, validatorFunction: ValidatorFunctionRunner) {
+        const game = new Game(title,picks, start, end, tokenAddress, AppManager.wallet, validatorFunction);
         this.activeGames.set(game.id, game);
         return game;
     }
